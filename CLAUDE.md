@@ -11,6 +11,7 @@ Hosting tiene dos sitios (ver `firebase.json` / `.firebaserc`): target `app` →
    - Ajustar el texto de las secciones afectadas, la versión y fecha del encabezado/pie, y agregar una entrada en **Novedades**.
 3. Validar sintaxis: `node --check` sobre `js/*.js`, `js/views/*.js` y `sw.js`.
 4. Desplegar: `npx -y firebase-tools@13 deploy --only "hosting,firestore:rules" --project despensapp-eb4a7 --non-interactive` (PowerShell; la sesión de Firebase ya está iniciada).
+5. Subir a GitHub (repo público https://github.com/xhorus11/despensapp, rama `main`): commit con autor `Matías Gajardo <xhorus11@users.noreply.github.com>` (ya configurado en el repo) y `git push`. GitHub CLI en `C:\Program Files\GitHub CLI\gh.exe`, sesión iniciada como xhorus11.
 
 ## Convenciones
 - UI con íconos SVG de `js/icons.js`; los emojis son solo contenido (productos, categorías, recetas).
