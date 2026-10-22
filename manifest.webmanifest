@@ -1,0 +1,22 @@
+{
+  "name": "despensAPP — Despensa, Súper y Plata del Hogar",
+  "short_name": "despensAPP",
+  "description": "Control de despensa, lista del súper con calculadora en vivo, menú inteligente y finanzas del hogar compartidas.",
+  "lang": "es-CL",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#0a0718",
+  "categories": ["food", "finance", "lifestyle", "productivity"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Mi Lista", "url": "./index.html#shop", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Registrar gasto", "url": "./index.html#money", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

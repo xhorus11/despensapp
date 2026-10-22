@@ -1,0 +1,89 @@
+{
+  "hosting": [
+    {
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "firestore.rules",
+        ".firebaserc",
+        "README.md",
+        "CLAUDE.md",
+        "Logo DespensAPP.png",
+        "tools/**",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "sw.js",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        {
+          "source": "**/*.@(js|css|html|webmanifest)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        }
+      ],
+      "target": "app"
+    },
+    {
+      "public": ".",
+      "ignore": [
+        "firebase.json",
+        "firestore.rules",
+        ".firebaserc",
+        "README.md",
+        "CLAUDE.md",
+        "Logo DespensAPP.png",
+        "tools/**",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "headers": [
+        {
+          "source": "sw.js",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        },
+        {
+          "source": "**/*.@(js|css|html|webmanifest)",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "no-cache"
+            }
+          ]
+        }
+      ],
+      "target": "legacy",
+      "redirects": [
+        {
+          "source": "/manual",
+          "destination": "https://despensapp.web.app/manual/",
+          "type": 301
+        },
+        {
+          "source": "/manual/**",
+          "destination": "https://despensapp.web.app/manual/",
+          "type": 301
+        }
+      ]
+    }
+  ],
+  "firestore": {
+    "rules": "firestore.rules"
+  }
+}

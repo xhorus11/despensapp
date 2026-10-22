@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manual de uso · despensAPP</title>
+  <meta name="description" content="Guía paso a paso de despensAPP: despensa, lista del súper, menú, finanzas y hogar compartido.">
+  <meta name="theme-color" content="#0a0718">
+  <link rel="icon" href="../icons/favicon-64.png" type="image/png">
+  <style>
+    :root { --bg: #0a0718; --bg2: #140c33; --glass: rgba(255,255,255,.055); --line: rgba(255,255,255,.1); --tx: #f4f1ff; --tx2: #b9b0dc; --tx3: #8077a8;
+      --vio: #8b5cf6; --pink: #ec4899; --green: #34d399; --cyan: #22d3ee; --yellow: #fbbf24; --grad: linear-gradient(135deg, #8b5cf6, #ec4899); color-scheme: dark; }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 76px; }
+    body { margin: 0; background: var(--bg); color: var(--tx); font: 16px/1.6 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background-image: radial-gradient(900px 500px at 110% -10%, rgba(139,92,246,.25), transparent 60%), radial-gradient(700px 500px at -20% 40%, rgba(52,211,153,.10), transparent 60%); background-attachment: fixed; }
+    a { color: var(--cyan); }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+    header.hero { text-align: center; padding: 34px 0 10px; }
+    header.hero img { width: min(260px, 70vw); height: auto; filter: drop-shadow(0 16px 36px rgba(52,211,153,.25)); }
+    header.hero h1 { font-size: clamp(28px, 6vw, 42px); margin: 8px 0 4px; letter-spacing: -.02em; }
+    header.hero p { color: var(--tx2); margin: 0 auto; max-width: 620px; }
+    .meta { display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 14px 0 6px; }
+    .tag { padding: 4px 12px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line); font-size: 13px; color: var(--tx2); }
+    .cta { display: inline-flex; gap: 8px; align-items: center; margin-top: 12px; padding: 12px 20px; border-radius: 14px; background: var(--grad); color: #fff; font-weight: 800; text-decoration: none; }
+    nav.toc { position: sticky; top: 0; z-index: 5; background: rgba(10,7,24,.88); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+    nav.toc .wrap { display: flex; gap: 6px; overflow-x: auto; padding: 10px 16px; scrollbar-width: none; }
+    nav.toc a { flex: none; padding: 7px 13px; border-radius: 11px; background: var(--glass); border: 1px solid var(--line); color: var(--tx2); text-decoration: none; font-size: 14px; font-weight: 600; }
+    nav.toc a:hover { color: #fff; border-color: var(--pink); }
+    section.ch { padding: 34px 0 10px; border-bottom: 1px solid var(--line); }
+    section.ch > h2 { font-size: 26px; margin: 0 0 6px; display: flex; gap: 10px; align-items: center; }
+    section.ch > h2 .n { width: 34px; height: 34px; border-radius: 11px; background: var(--grad); display: grid; place-items: center; font-size: 16px; flex: none; }
+    section.ch > p.lead { color: var(--tx2); margin: 0 0 18px; max-width: 760px; }
+    .step { display: grid; grid-template-columns: 260px 1fr; gap: 26px; align-items: start; margin: 22px 0 30px; }
+    .step.rev { grid-template-columns: 1fr 260px; }
+    .step.rev .phone { order: 2; }
+    .phone { position: relative; border-radius: 30px; padding: 8px; background: linear-gradient(160deg, #2a1f5c, #0d0921); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 24px 50px -20px rgba(0,0,0,.8); }
+    .phone img { display: block; width: 100%; height: auto; border-radius: 23px; }
+    .step h3 { margin: 4px 0 8px; font-size: 20px; }
+    .step p, .step li { color: var(--tx2); }
+    .step ol, .step ul { padding-left: 20px; margin: 8px 0; }
+    .step li { margin: 6px 0; }
+    .step li::marker { color: var(--pink); font-weight: 800; }
+    b, strong { color: var(--tx); }
+    .tip { margin: 12px 0; padding: 10px 14px; border-radius: 12px; background: rgba(34,211,238,.08); border: 1px solid rgba(34,211,238,.25); font-size: 14.5px; color: #c6f6fd; }
+    .warn { margin: 12px 0; padding: 10px 14px; border-radius: 12px; background: rgba(251,146,60,.1); border: 1px solid rgba(251,146,60,.3); font-size: 14.5px; color: #fed7aa; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 14.5px; }
+    th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--tx3); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+    details { background: var(--glass); border: 1px solid var(--line); border-radius: 14px; padding: 12px 16px; margin: 10px 0; }
+    details summary { cursor: pointer; font-weight: 700; }
+    details p { color: var(--tx2); margin: 8px 0 2px; }
+    .log { border-left: 2px solid var(--vio); padding-left: 16px; margin: 14px 0; }
+    .log h4 { margin: 0 0 4px; } .log ul { margin: 4px 0; color: var(--tx2); }
+    footer { text-align: center; color: var(--tx3); font-size: 13px; padding: 30px 0 50px; }
+    @media (max-width: 720px) {
+      .step, .step.rev { grid-template-columns: 1fr; gap: 14px; }
+      .step.rev .phone { order: 0; }
+      .phone { max-width: 290px; margin: 0 auto; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero wrap">
+    <img src="../img/logo.webp" alt="despensAPP" width="260" height="260">
+    <h1>Manual de uso</h1>
+    <p>Todo lo que necesitas para controlar la despensa, comprar sin salirte del presupuesto, planificar el menú y llevar las cuentas claras del hogar.</p>
+    <div class="meta">
+      <span class="tag">Versión 1.1.1</span>
+      <span class="tag">Actualizado: 18 de octubre de 2026</span>
+      <span class="tag">22 pantallas</span>
+    </div><br>
+    <a class="cta" href="../">Abrir despensAPP →</a>
+  </header>
+
+  <nav class="toc"><div class="wrap">
+    <a href="#instalar">Instalar</a><a href="#inicio">Primeros pasos</a><a href="#despensa">Despensa</a><a href="#lista">Lista y Súper</a>
+    <a href="#menu">Menú y recetas</a><a href="#salud">Dietas y salud</a><a href="#plata">Plata</a><a href="#hogar">Hogares</a><a href="#faq">Preguntas</a><a href="#cambios">Novedades</a>
+  </div></nav>
+
+  <main class="wrap">
+
+    <section class="ch" id="instalar">
+      <h2><span class="n">1</span>Instalar la app</h2>
+      <p class="lead">despensAPP es una aplicación web (PWA): se abre desde el navegador y se puede instalar como una app normal, sin tienda de aplicaciones. Una vez instalada funciona sin internet.</p>
+      <div class="step">
+        <div class="phone"><img src="img/21-instalar.webp" alt="Pantalla de instalación" loading="lazy"></div>
+        <div>
+          <h3>Botón “Instalar”</h3>
+          <ol>
+            <li>Abre <a href="https://despensapp.web.app">despensapp.web.app</a> en el teléfono.</li>
+            <li>Toca el botón verde <b>Instalar</b> de la barra superior (o la tarjeta “Instala despensAPP” en Inicio).</li>
+            <li><b>Android / Chrome:</b> aparece el aviso del sistema; confirma con <b>Instalar</b>.</li>
+            <li><b>iPhone / Safari:</b> toca <b>Compartir</b> → <b>Agregar a pantalla de inicio</b> → <b>Agregar</b>.</li>
+          </ol>
+          <p class="tip">¿Usabas la dirección anterior (despensapp-eb4a7.web.app)? Ábrela una vez y toca <b>“Ir a despensapp.web.app con mis datos”</b>; luego instala la app desde la nueva dirección.</p>
+          <p class="tip">Cuando la app ya está instalada, el botón desaparece. También encuentras “Instalar app” en la pestaña <b>Hogar</b>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="inicio">
+      <h2><span class="n">2</span>Primeros pasos e Inicio</h2>
+      <p class="lead">La primera vez se configura el hogar: nombre, quién eres, quién más vive contigo y el presupuesto mensual.</p>
+      <div class="step">
+        <div class="phone"><img src="img/01-bienvenida.webp" alt="Bienvenida" loading="lazy"></div>
+        <div>
+          <h3>Bienvenida</h3>
+          <ol>
+            <li>Escribe el <b>nombre del hogar</b>, <b>tu nombre</b> y el resto de los integrantes separados por comas.</li>
+            <li>Define el <b>presupuesto mensual</b> (puedes cambiarlo después).</li>
+            <li>Toca <b>Empezar</b>. Si quieres ver la app con datos, usa <b>Probar con datos de ejemplo</b>.</li>
+            <li>¿Te invitaron? Escribe el <b>código del hogar</b> y toca <b>Unirme</b>.</li>
+          </ol>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/02-inicio.webp" alt="Inicio" loading="lazy"></div>
+        <div>
+          <h3>Pantalla de Inicio</h3>
+          <ul>
+            <li><b>Anillo de presupuesto:</b> cuánto se ha gastado en el período y cuánto queda.</li>
+            <li><b>Accesos rápidos:</b> productos por comprar, productos en despensa y el <b>Modo Súper</b>.</li>
+            <li><b>Alertas:</b> productos vencidos o por vencer (🟢 bien, 🟡 vence en menos de 5 días, 🔴 vencido) y productos bajo el mínimo.</li>
+            <li><b>Próximas comidas</b> y la <b>bitácora</b> con lo último que hizo cada integrante.</li>
+          </ul>
+          <p class="tip">Si tienes más de un hogar, toca el nombre del hogar para cambiar de uno a otro.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="despensa">
+      <h2><span class="n">3</span>Despensa</h2>
+      <p class="lead">Lo que hay en casa, con cantidades en varias unidades, fecha de vencimiento y stock mínimo.</p>
+      <div class="step">
+        <div class="phone"><img src="img/03-despensa.webp" alt="Despensa" loading="lazy"></div>
+        <div>
+          <h3>Ver y filtrar</h3>
+          <ul>
+            <li>Arriba: total de productos, cuántos están por vencer y cuántos bajo el mínimo.</li>
+            <li>La tarjeta <b>Sugerencia</b> agrega a la lista todo lo que bajó del mínimo con un toque.</li>
+            <li>Busca por nombre o filtra por <b>Por vencer</b>, <b>Reponer</b> o categoría.</li>
+            <li>El botón <b>−</b> de cada fila descuenta una porción rápida (con opción <b>Deshacer</b>).</li>
+            <li>El ícono <b>compartir</b> genera el texto “Qué nos queda en casa”, “Por vencer” o “Faltantes” para WhatsApp, o como imagen.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/04-despensa-editar.webp" alt="Editar producto" loading="lazy"></div>
+        <div>
+          <h3>Editar un producto</h3>
+          <ul>
+            <li>Ajusta la cantidad con <b>−</b> / <b>+</b> o escríbela. Puedes sumar otra unidad (ej: 1 L + 250 ml).</li>
+            <li><b>Vencimiento</b> activa el semáforo y las alertas.</li>
+            <li><b>Stock mínimo:</b> si baja de ese número, la app sugiere reponerlo.</li>
+            <li><b>Se acabó → Mandar a la lista</b> lo deja en cero y lo agrega a Mi Lista.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="phone"><img src="img/05-catalogo.webp" alt="Catálogo" loading="lazy"></div>
+        <div>
+          <h3>Agregar desde el catálogo</h3>
+          <p>Toca el botón <b>+</b>. El catálogo tiene <b>20 categorías y más de 330 productos</b> de supermercado chileno, cada uno con variantes (marca, formato, tipo).</p>
+          <ul>
+            <li>Busca por nombre o entra a una categoría.</li>
+            <li>¿No está? Usa <b>Producto personalizado</b> e indica si contiene gluten, lactosa, etc.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/06-producto.webp" alt="Detalle de producto" loading="lazy"></div>
+        <div>
+          <h3>Variante, cantidad y unidad</h3>
+          <ol>
+            <li>Elige la <b>variante</b> (o crea una con <b>+ Variante</b>).</li>
+            <li>Indica la <b>cantidad</b> y la <b>unidad</b> (un, g, kg, ml, L).</li>
+            <li>Opcional: vencimiento y stock mínimo.</li>
+            <li>Si el producto no es apto para alguien de la casa, aparece un aviso.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="lista">
+      <h2><span class="n">4</span>Mi Lista y Modo En el Súper</h2>
+      <p class="lead">Planifica la compra en casa y úsala como calculadora en el pasillo.</p>
+      <div class="step">
+        <div class="phone"><img src="img/07-lista.webp" alt="Mi Lista" loading="lazy"></div>
+        <div>
+          <h3>Planificar</h3>
+          <ul>
+            <li>Agrega desde el <b>Catálogo</b>, <b>Desde despensa</b> (lo que se acabó primero) o <b>Desde menú</b> (solo lo que falta para las recetas agendadas).</li>
+            <li>Cada producto muestra la cantidad exacta y su origen (ej: “para Pastas bolognesa”).</li>
+            <li>Si ya hay algo en casa, lo indica en celeste. Los avisos de dieta y salud aparecen bajo el producto.</li>
+            <li><b>Compartir</b> envía la lista por WhatsApp.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/08-super.webp" alt="Modo Súper" loading="lazy"></div>
+        <div>
+          <h3>En el Súper</h3>
+          <ul>
+            <li>El <b>termómetro</b> compara el carro con el presupuesto por compra: verde, amarillo (más del 80 %) y rojo cuando te pasas.</li>
+            <li>La barra inferior suma el carro <b>en tiempo real</b>.</li>
+            <li>Toca un producto para registrar el precio real.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="phone"><img src="img/09-precio.webp" alt="Registrar precio" loading="lazy"></div>
+        <div>
+          <h3>¿Cuánto costó?</h3>
+          <ul>
+            <li>Ingresa el <b>precio total</b> o el <b>precio por unidad</b>.</li>
+            <li>Aplica ofertas: <b>−10 %</b> a <b>−50 %</b>, <b>2×1</b>, <b>3×2</b>, <b>4×3</b> o <b>2º al 50 %</b>.</li>
+            <li>Con el contenido del envase calcula el <b>valor útil</b> ($/kg o $/L).</li>
+            <li>“Carro quedaría” muestra cómo queda el total antes de confirmar.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/10-comparador.webp" alt="Comparador" loading="lazy"></div>
+        <div>
+          <h3>Comparador de formatos</h3>
+          <p>¿Conviene el formato grande? Ingresa precio y contenido de dos o más opciones y la app marca la más barata por kilo, litro o unidad, con el porcentaje de ahorro.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="phone"><img src="img/11-cerrar-compra.webp" alt="Cerrar compra" loading="lazy"></div>
+        <div>
+          <h3>Cerrar la compra</h3>
+          <ol>
+            <li>Toca <b>Cerrar</b> cuando termines.</li>
+            <li>Los productos comprados pasan <b>automáticamente a la Despensa</b>.</li>
+            <li>Con <b>Cerrar y registrar gasto</b> se crea un <b>borrador de gasto</b> con el total y el detalle, listo para adjuntar la boleta.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="menu">
+      <h2><span class="n">5</span>Menú y recetario</h2>
+      <p class="lead">95 recetas chilenas e internacionales que se ajustan al número de personas y revisan lo que hay en la despensa.</p>
+      <div class="step">
+        <div class="phone"><img src="img/12-menu-semana.webp" alt="Menú semanal" loading="lazy"></div>
+        <div>
+          <h3>Semana</h3>
+          <ul>
+            <li>Navega entre semanas con las flechas. El día de hoy aparece destacado.</li>
+            <li>Cada comida indica si está <b>lista</b> o cuántos ingredientes <b>faltan</b>.</li>
+            <li><b>Enviar faltantes de la semana</b> agrega a Mi Lista solo lo que falta.</li>
+            <li>Toca una comida para marcarla como <b>Cocinado</b>: los ingredientes se descuentan de la despensa.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/13-recetario.webp" alt="Recetario" loading="lazy"></div>
+        <div>
+          <h3>Recetario</h3>
+          <ul>
+            <li>Busca por receta o ingrediente y filtra por categoría.</li>
+            <li><b>Con lo que hay</b> muestra recetas que puedes hacer sin comprar nada.</li>
+            <li><b>Aptas para todos</b> oculta las que tienen problemas de dieta o salud.</li>
+            <li>La barra verde indica cuántos ingredientes tienes; las letras de colores son los integrantes (verde apto, naranja precaución, amarillo adaptable, rojo no apto).</li>
+            <li>Con el botón <b>+</b> creas tus propias recetas.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step">
+        <div class="phone"><img src="img/14-receta.webp" alt="Ficha de receta" loading="lazy"></div>
+        <div>
+          <h3>Ficha de receta</h3>
+          <ul>
+            <li>Cambia el número de <b>personas</b> y las cantidades se recalculan.</li>
+            <li>Cada ingrediente indica si está <b>en casa</b>, si <b>falta</b> o cuánto falta.</li>
+            <li>Si hay restricciones, elige: <b>Porción aparte</b> (se compra la versión apta solo para quien la necesita), <b>Todo el plato apto</b> o <b>Sin adaptar</b>.</li>
+            <li>Botones: <b>Agendar</b>, <b>Faltantes a lista</b> y <b>Cociné esto</b>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/16-agendar.webp" alt="Agendar comida" loading="lazy"></div>
+        <div>
+          <h3>Agendar</h3>
+          <p>Elige día, tipo de comida (desayuno, almuerzo, once, cena, colación) y personas. Con la casilla marcada, se envía a Mi Lista <b>solo lo que falta</b>, descontando lo que ya tienes y lo que ya está en la lista.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="salud">
+      <h2><span class="n">6</span>Dietas, alergias y salud</h2>
+      <p class="lead">Cada integrante puede tener dietas, alergias, condiciones de salud y alimentos que no puede comer. La app los usa en la lista, el catálogo y las recetas.</p>
+      <div class="step">
+        <div class="phone"><img src="img/20-integrante.webp" alt="Ficha del integrante" loading="lazy"></div>
+        <div>
+          <h3>Configurar a un integrante</h3>
+          <p>En <b>Hogar → Integrantes</b>, toca a la persona:</p>
+          <ul>
+            <li><b>Dietas y alergias</b> (prohíben el producto): celíaco, sin lactosa, vegetariano, vegano, frutos secos, mariscos, huevo, soya, sin cerdo, sin alcohol.</li>
+            <li><b>Condiciones de salud</b> (avisan antes de usar una receta): diabetes, hipertensión, colesterol alto, gota, enfermedad renal, embarazo, gastritis.</li>
+            <li><b>Alimentos que no puede comer:</b> busca y agrega productos puntuales (ej: palta, cilantro).</li>
+          </ul>
+          <table>
+            <tr><th>Condición</th><th>Avisa por</th></tr>
+            <tr><td>Hipertensión / renal</td><td>Productos altos en sodio (sal, caldos, embutidos, salsa de soya, snacks, conservas)</td></tr>
+            <tr><td>Colesterol / gastritis</td><td>Grasas saturadas (mantequilla, crema, embutidos, frituras)</td></tr>
+            <tr><td>Gota</td><td>Mariscos, vísceras, sardinas y alcohol</td></tr>
+            <tr><td>Diabetes</td><td>Azúcar (prohíbe) y miel (precaución)</td></tr>
+            <tr><td>Embarazo</td><td>Alcohol (prohíbe) y crudos o curados (sushi, ahumados, salame)</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/15-aviso-salud.webp" alt="Aviso de salud" loading="lazy"></div>
+        <div>
+          <h3>Aviso antes de usar una receta</h3>
+          <p>Al <b>agendar</b>, <b>mandar faltantes</b> o <b>cocinar</b> una receta con algún problema, aparece este aviso:</p>
+          <ul>
+            <li><b>Rojo:</b> alguien no puede comerla y no hay alternativa (o elegiste “Sin adaptar”).</li>
+            <li><b>Amarillo:</b> se adaptará con una versión apta (ej: pan sin gluten para Cami).</li>
+            <li><b>Naranja:</b> precaución por una condición de salud (ej: vienesas altas en sodio para Ana).</li>
+          </ul>
+          <p>Toca <b>Entendido, continuar</b> para seguir o <b>Volver</b> para elegir otra receta.</p>
+          <p class="warn">Los avisos son una ayuda para organizarse y no reemplazan la indicación de un médico o nutricionista.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="plata">
+      <h2><span class="n">7</span>Plata: presupuesto, gastos y cuentas claras</h2>
+      <div class="step">
+        <div class="phone"><img src="img/17-plata.webp" alt="Finanzas" loading="lazy"></div>
+        <div>
+          <h3>Resumen</h3>
+          <ul>
+            <li>Elige <b>Semana</b>, <b>Mes</b> o <b>Todo</b> y navega entre períodos.</li>
+            <li>El <b>termómetro</b> compara lo gastado con el presupuesto meta; debajo, el gasto por categoría.</li>
+            <li><b>Cuentas claras:</b> cuánto pagó cada uno, cuánto le corresponde y quién le debe a quién. <b>Saldar</b> registra la transferencia.</li>
+            <li>Exporta el <b>Informe PDF</b> (con resumen, detalle, firmas y fotos de boletas), un <b>CSV</b> para Excel o una <b>imagen</b>.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/18-gasto.webp" alt="Nuevo gasto" loading="lazy"></div>
+        <div>
+          <h3>Registrar un gasto</h3>
+          <ol>
+            <li>Monto, descripción y categoría (supermercado, feria, farmacia, etc.).</li>
+            <li>Fecha, tipo y número de documento, y método de pago.</li>
+            <li><b>¿Quién pagó?</b> y <b>Repartir entre</b> (todos o solo algunos).</li>
+            <li>Adjunta la <b>foto de la boleta</b> con la cámara o la galería. Con internet, <b>Leer total desde la boleta</b> intenta detectar el monto.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="hogar">
+      <h2><span class="n">8</span>Hogares, sincronización y bitácora</h2>
+      <div class="step">
+        <div class="phone"><img src="img/19-hogar.webp" alt="Hogar" loading="lazy"></div>
+        <div>
+          <h3>Varios hogares</h3>
+          <p>Puedes tener <b>más de un hogar</b> (por ejemplo, tu casa y la casa de la playa, o la casa de tus padres). Cada uno tiene su propia despensa, lista, menú, gastos, integrantes y código de sincronización.</p>
+          <ul>
+            <li><b>Crear:</b> escribe el nombre en “Mis hogares” y toca <b>+</b>.</li>
+            <li><b>Cambiar:</b> toca el hogar en la lista, o su nombre en Inicio.</li>
+            <li><b>Eliminar:</b> ícono de basurero (dos toques). Solo se borra de este teléfono.</li>
+          </ul>
+          <h3>Hogar compartido</h3>
+          <ol>
+            <li>En el hogar activo toca <b>Crear hogar compartido</b>: aparece un <b>código de 6 letras</b> y un <b>QR</b>.</li>
+            <li>Los demás integrantes tocan <b>Unirme</b> con el código o <b>Escanear QR</b>.</li>
+            <li>Desde ese momento todos ven la despensa, la lista y los gastos <b>en tiempo real</b>, con avisos cuando alguien hace un cambio.</li>
+          </ol>
+          <p class="tip">Si te unes a un hogar mientras el actual ya tiene datos, la app crea un hogar nuevo para no mezclar despensas.</p>
+          <p class="warn">Cualquiera que tenga el código puede ver y editar ese hogar: compártelo solo con quienes viven contigo.</p>
+        </div>
+      </div>
+      <div class="step rev">
+        <div class="phone"><img src="img/22-bitacora.webp" alt="Bitácora" loading="lazy"></div>
+        <div>
+          <h3>Bitácora</h3>
+          <p>Registro automático de lo que hace cada integrante (“Ana echó al carro Yogur”, “Pablo registró una boleta de $34.500”), filtrable por Despensa, Lista, Finanzas, Menú, Hogar y Catálogo.</p>
+          <h3>Respaldo</h3>
+          <p>En Hogar puedes <b>exportar</b> todos los datos a un archivo JSON e <b>importarlo</b> en otro teléfono (se combina con lo que ya hay).</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ch" id="faq">
+      <h2><span class="n">?</span>Preguntas frecuentes</h2>
+      <details><summary>¿Funciona sin internet?</summary><p>Sí. Todo se guarda en el teléfono. Si el hogar es compartido, los cambios se sincronizan al recuperar la conexión. Solo la lectura automática de boletas necesita internet.</p></details>
+      <details><summary>¿Dónde quedan las fotos de las boletas?</summary><p>En el teléfono, comprimidas. En un hogar compartido también se suben para que los demás las vean.</p></details>
+      <details><summary>Cambié algo y otro integrante también, ¿se pierde algo?</summary><p>No. La app combina los cambios producto por producto y gasto por gasto; si dos personas editan el mismo producto, queda el último cambio.</p></details>
+      <details><summary>No encuentro un producto en el catálogo</summary><p>Búscalo y toca “Crear producto…”, o agrega una variante nueva a un producto existente. Quedan disponibles para todo el hogar.</p></details>
+      <details><summary>¿Cómo veo la versión nueva cuando hay una actualización?</summary><p>La app avisa con “Nueva versión disponible”; toca <b>Actualizar</b>. Si no aparece, cierra y vuelve a abrir la app.</p></details>
+    </section>
+
+    <section class="ch" id="cambios">
+      <h2><span class="n">★</span>Novedades</h2>
+      <div class="log">
+        <h4>Versión 1.1.1 — 18 de octubre de 2026</h4>
+        <ul>
+          <li>Nueva dirección: <b>despensapp.web.app</b>. La dirección anterior muestra un aviso con el botón <b>“Ir a despensapp.web.app con mis datos”</b>, que traslada todos tus hogares; los enlaces de invitación se redirigen solos.</li>
+        </ul>
+      </div>
+      <div class="log">
+        <h4>Versión 1.1.0 — 18 de octubre de 2026</h4>
+        <ul>
+          <li>Nuevo logo e íconos de la app.</li>
+          <li>Botón <b>Instalar</b> en la barra superior, en Inicio y en Hogar (con instrucciones para iPhone).</li>
+          <li>Catálogo ampliado con categorías de supermercados chilenos: de 223 a <b>333 productos</b>, nueva categoría <b>Comidas preparadas</b>.</li>
+          <li><b>Condiciones de salud</b> por integrante (hipertensión, diabetes, colesterol, gota, renal, embarazo, gastritis) y <b>alimentos prohibidos</b> puntuales.</li>
+          <li><b>Aviso previo</b> antes de agendar, comprar o cocinar una receta con restricciones.</li>
+          <li><b>Varios hogares</b> en el mismo teléfono, cada uno con su propia despensa y sincronización.</li>
+          <li>Manual de uso con capturas.</li>
+          <li>Corrección: el botón atrás ya no puede sacarte de la app al cerrar y abrir hojas seguidas; variantes de agua “1.6 L” se mostraban partidas.</li>
+        </ul>
+      </div>
+      <div class="log">
+        <h4>Versión 1.0.1 — 16 de octubre de 2026</h4>
+        <ul><li>Lanzamiento: despensa, lista con Modo Súper, menú con 95 recetas, finanzas con boletas y PDF, hogar compartido en tiempo real.</li></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="wrap">despensAPP · Manual de uso v1.1.1 · <a href="../">Volver a la app</a></footer>
+</body>
+</html>

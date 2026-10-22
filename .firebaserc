@@ -1,0 +1,18 @@
+{
+  "projects": {
+    "default": "despensapp-eb4a7"
+  },
+  "targets": {
+    "despensapp-eb4a7": {
+      "hosting": {
+        "app": [
+          "despensapp"
+        ],
+        "legacy": [
+          "despensapp-eb4a7"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

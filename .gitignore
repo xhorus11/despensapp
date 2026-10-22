@@ -1,0 +1,12 @@
+# Dependencias de las herramientas (capturas / pruebas)
+node_modules/
+
+# Caché local del CLI de Firebase
+.firebase/
+firebase-debug.log
+firestore-debug.log
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
