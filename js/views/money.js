@@ -41,6 +41,7 @@ const MoneyView = (() => {
       </section>
       <div class="quick-actions">
         <button class="qa" data-act="moneyNew">${ico('plus')}<span>Gasto</span></button>
+        <button class="qa hl" data-act="moneySplit">${ico('users')}<span>Cuentas separadas</span></button>
         <button class="qa" data-act="moneyBudget">${ico('flame')}<span>Presupuesto</span></button>
         <button class="qa" data-act="moneyPdf">${ico('file')}<span>Informe PDF</span></button>
         <button class="qa" data-act="moneyCsv">${ico('sheet')}<span>CSV Excel</span></button>
@@ -58,7 +59,7 @@ const MoneyView = (() => {
         <div class="list">${groups[d].map(e => `<button class="row card-row exp-row" data-act="moneyEdit" data-id="${e.id}">
           <span class="em">${Money.catEmoji(e.cat)}</span>
           <span class="grow"><b>${esc(e.desc || e.cat)}</b><small>${esc(e.cat)}${e.payer ? ' · pagó ' + esc(e.payer) : ''}${e.method ? ' · ' + esc(e.method) : ''}</small>
-            ${e.draft ? `<span class="pill warn">borrador</span>` : ''}${(e.photos || []).length ? `<span class="pill">${ico('camera')} ${e.photos.length}</span>` : ''}${(e.items || []).length ? `<span class="pill">${e.items.length} ítems</span>` : ''}</span>
+            ${e.draft ? `<span class="pill warn">borrador</span>` : ''}${(e.photos || []).length ? `<span class="pill">${ico('camera')} ${e.photos.length}</span>` : ''}${(e.items || []).length ? `<span class="pill">${e.items.length} ítems</span>` : ''}${e.split ? `<span class="pill ok">${ico('users')} dividida</span>` : ''}</span>
           <b class="amt">${Money.fmt(e.amount)}</b></button>`).join('')}</div>`).join('')
         : UI.empty('receipt', 'Sin gastos en este período', 'Registra una boleta o cierra una compra del súper para crear un gasto automáticamente.')}
       <button class="fab" data-act="moneyNew" aria-label="Nuevo gasto">${ico('plus')}</button>`;
@@ -81,7 +82,11 @@ const MoneyView = (() => {
       ${UI.chips(Money.DOCS, fx.docType, 'fxSet', 'data-f="docType"')}
       <label class="lbl">Método de pago</label>
       ${UI.chips(Money.METHODS, fx.method, 'fxSet', 'data-f="method"')}
-      ${mem.length ? `<label class="lbl">¿Quién pagó?</label>${UI.chips(mem, fx.payer, 'fxSet', 'data-f="payer"')}
+      <div class="split-cta">
+        <div class="grow"><b>${ico('users')} Cuentas separadas</b><small>${fx.split ? `Dividida entre ${fx.split.people.map(esc).join(', ')}` : 'Divide por productos, agrega o quita personas y registra quién aportó.'}</small></div>
+        <button class="btn sm ${fx.split ? 'ghost' : 'primary'}" data-act="fxSplit">${fx.split ? 'Editar' : 'Dividir'}</button>
+      </div>
+      ${fx.split ? '' : mem.length ? `<label class="lbl">¿Quién pagó?</label>${UI.chips(mem, fx.payer, 'fxSet', 'data-f="payer"')}
         <label class="lbl">Repartir entre <small class="hint">(${fx.among.length === mem.length ? 'todos' : 'solo algunos'})</small></label>
         ${UI.chips(mem, fx.among, 'fxAmong')}
         ${fx.among.length && fx.amount ? `<p class="hint">${Money.fmt((parseFloat(fx.amount) || 0) / fx.among.length)} c/u</p>` : ''}`
@@ -147,6 +152,20 @@ const MoneyView = (() => {
     const u = await Photos.url(el.dataset.id);
     if (!u) return;
     UI.open('Boleta', () => `<img class="full-photo" src="${u}" alt="boleta">`, null, { tall: true });
+  };
+  // Guarda el gasto (sin cerrar) y abre Cuentas separadas encima
+  Actions.fxSplit = () => {
+    fxRead();
+    if (!(fx.amount > 0)) { UI.toast('Primero ingresa el monto de la boleta', { type: 'err' }); return; }
+    const { isNew: _, removed, ...data } = fx;
+    data.draft = false; data.t = Store.now(); if (!data.created) data.created = Store.now();
+    if (!data.among || !data.among.length) data.among = members().slice();
+    const k = Store.state.expenses.findIndex(x => x.id === data.id);
+    if (k >= 0) Store.state.expenses[k] = data; else Store.state.expenses.unshift(data);
+    (removed || []).forEach(id => { Photos.del(id); Sync.deletePhoto(id); });
+    Store.commit();
+    UI.closeAll();
+    setTimeout(() => SplitView.open(data.id), 60);
   };
   Actions.fxSave = () => {
     fxRead();

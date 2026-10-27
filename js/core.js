@@ -436,11 +436,42 @@ const Money = {
     list.filter(e => e.cat !== 'Ajuste').forEach(e => { m[e.cat] = (m[e.cat] || 0) + (+e.amount || 0); });
     return Object.entries(m).sort((a, b) => b[1] - a[1]);
   },
+  // Cuentas separadas de una boleta: cuánto consumió y cuánto aportó cada persona
+  // split = { people:[...], lines:[{id,n,price,who:[]}], restWho:[], contrib:[{who,amount}] }  (who vacío = todos)
+  splitCalc(e) {
+    const s = e.split || {};
+    const people = (s.people || []).filter(Boolean);
+    const amount = +e.amount || 0;
+    const P = {};
+    people.forEach(p => { P[p] = { name: p, cons: 0, paid: 0 }; });
+    const share = (who, v) => {
+      const list = (who && who.length ? who : people).filter(p => P[p]);
+      if (!list.length) return;
+      list.forEach(p => { P[p].cons += v / list.length; });
+    };
+    let linesTotal = 0;
+    (s.lines || []).forEach(l => { const v = +l.price || 0; linesTotal += v; share(l.who, v); });
+    const rest = amount - linesTotal;
+    if (Math.abs(rest) > 0.004) share(s.restWho, rest);
+    let contribTotal = 0;
+    const contrib = (s.contrib || []).filter(c => c.who && +c.amount);
+    if (contrib.length) contrib.forEach(c => { if (!P[c.who]) P[c.who] = { name: c.who, cons: 0, paid: 0 }; P[c.who].paid += +c.amount; contribTotal += +c.amount; });
+    else if (e.payer) { if (!P[e.payer]) P[e.payer] = { name: e.payer, cons: 0, paid: 0 }; P[e.payer].paid = amount; contribTotal = amount; }
+    const rows = Object.values(P).map(x => ({ ...x, net: x.paid - x.cons }));
+    return { rows, amount, linesTotal, rest, contribTotal, contribDiff: amount - contribTotal };
+  },
   // Balance por integrante: positivo = le deben, negativo = debe
   balances(list) {
     const b = {};
     Store.state.household.members.forEach(m => { b[m] = { paid: 0, share: 0 }; });
     list.forEach(e => {
+      if (e.split && (e.split.people || []).length) {
+        Money.splitCalc(e).rows.forEach(r => {
+          if (!b[r.name]) b[r.name] = { paid: 0, share: 0 };
+          b[r.name].paid += r.paid; b[r.name].share += r.cons;
+        });
+        return;
+      }
       const amt = +e.amount || 0;
       const among = (e.among && e.among.length ? e.among : Store.state.household.members).filter(Boolean);
       if (!e.payer || !among.length) return;

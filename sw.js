@@ -2,11 +2,11 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v1.1.1';
+const VERSION = 'despensapp-v1.2.0';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
   './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/sync.js', './js/export.js',
-  './js/views/picker.js', './js/views/home.js', './js/views/pantry.js', './js/views/shop.js', './js/views/menu.js', './js/views/money.js', './js/views/hogar.js', './js/app.js',
+  './js/views/picker.js', './js/views/home.js', './js/views/pantry.js', './js/views/shop.js', './js/views/menu.js', './js/views/money.js', './js/views/split.js', './js/views/hogar.js', './js/app.js',
 ];
 const STATIC = [
   './vendor/qrcode.min.js', './vendor/jsQR.js', './vendor/jspdf.umd.min.js', './vendor/jspdf.plugin.autotable.min.js', './vendor/html2canvas.min.js',

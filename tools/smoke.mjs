@@ -70,6 +70,32 @@ const results = await page.evaluate(async () => {
   check('dosHogares', Store.homes().length === 2);
   await Sync.switchTo(() => Store.switchHome('h1')); await w(100);
   check('volverHogarOriginal', Store.state.household.name === nameA && Pantry.entries().length > 5);
+  // Cuentas separadas
+  App.go('money'); await w(50);
+  click('[data-act="moneySplit"]'); await w(150);
+  click('[data-act="splitNew"]'); await w(200);
+  const setIn = (sel, v) => { const e = $q(sel); e.value = v; e.dispatchEvent(new Event('input', { bubbles: true })); };
+  setIn('[data-input="spAmount"]', '30000');
+  setIn('[data-input="spDesc"]', 'Prueba división');
+  click('[data-act="spAddPerson"][data-p=""]'); await w(100);
+  const pin = [...document.querySelectorAll('.sp-person input')].pop(); pin.value = 'Visita'; pin.dispatchEvent(new Event('change', { bubbles: true })); await w(100);
+  click('[data-act="spAddLine"]'); await w(100);
+  setIn('[data-input="spLineN"][data-k="0"]', 'Vino'); setIn('[data-input="spLineP"][data-k="0"]', '9000');
+  click('[data-act="spLineWho"][data-k="0"][data-p="Visita"]'); await w(100);
+  click('[data-act="spAddContrib"]'); await w(100);
+  const sel = $q('[data-change="spContribWho"][data-k="1"]'); sel.value = 'Visita'; sel.dispatchEvent(new Event('change', { bubbles: true }));
+  setIn('[data-input="spContribAmt"][data-k="1"]', '5000');
+  setIn('[data-input="spContribAmt"][data-k="0"]', '25000'); await w(50);
+  click('[data-act="spSave"]'); await w(300);
+  const ex = Store.state.expenses.find(e => e.desc === 'Prueba división');
+  check('divisionGuardada', !!(ex && ex.split && ex.split.people.includes('Visita')));
+  const rows = ex ? Money.splitCalc(ex).rows : [];
+  const vis = rows.find(r => r.name === 'Visita') || {};
+  const n = ex ? ex.split.people.length : 0;
+  // Visita: vino 9000 + parte igual del resto (21000/n); aportó 5000
+  check('calculoVisita', Math.abs(vis.cons - (9000 + 21000 / n)) < 1 && vis.paid === 5000);
+  check('cuentasClarasIncluyeVisita', Money.balances(Money.list()).some(b => b.member === 'Visita' && b.net < 0));
+
   // Exportes
   App.go('money'); await Exporter.pdf(Money.range('mes')); Exporter.csv(Money.range('mes'));
   return R;

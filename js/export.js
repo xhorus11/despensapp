@@ -86,6 +86,26 @@ const Exporter = (() => {
       y = doc.lastAutoTable.finalY + 8;
     });
 
+    // Cuentas separadas
+    list.filter(e => e.split && (e.split.people || []).length).forEach(e => {
+      const c = Money.splitCalc(e);
+      if (y > H - 50) { doc.addPage(); y = 18; }
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(30);
+      doc.text(`Cuentas separadas: ${clean(e.desc || e.cat)} (${UI.fmtDate(e.date, { day: '2-digit', month: '2-digit' })}) · ${money(e.amount)}`, 14, y);
+      const body = (e.split.lines || []).filter(l => +l.price).map(l => [clean(l.n || 'Producto'), money(l.price), (l.who && l.who.length ? l.who : ['Todos']).join(', ')]);
+      if (Math.abs(c.rest) >= 0.5) body.push(['Resto de la boleta', money(c.rest), (e.split.restWho && e.split.restWho.length ? e.split.restWho : ['Todos']).join(', ')]);
+      if (body.length) {
+        doc.autoTable({ startY: y + 2, head: [['Producto', 'Precio', 'Para']], body, theme: 'grid', headStyles: { fillColor: [52, 160, 120] }, styles: { fontSize: 8 }, columnStyles: { 1: { halign: 'right' } } });
+        y = doc.lastAutoTable.finalY;
+      }
+      doc.autoTable({
+        startY: y + 2, head: [['Persona', 'Consumió', 'Aportó', 'Saldo']],
+        body: c.rows.map(r => [r.name, money(r.cons), money(r.paid), (r.net > 0.5 ? '+' : '') + money(r.net)]),
+        theme: 'striped', headStyles: { fillColor: PURPLE }, styles: { fontSize: 8.5 }, columnStyles: { 1: { halign: 'right' }, 2: { halign: 'right' }, 3: { halign: 'right', fontStyle: 'bold' } },
+      });
+      y = doc.lastAutoTable.finalY + 8;
+    });
+
     // Firmas
     if (y > H - 50) { doc.addPage(); y = 24; }
     y += 8;
@@ -134,8 +154,9 @@ const Exporter = (() => {
   function csv(range) {
     const list = Money.inRange(range).slice().sort((a, b) => a.date.localeCompare(b.date));
     const q = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const rows = [['Fecha', 'Descripción', 'Categoría', 'Monto', 'Pagó', 'Repartido entre', 'Método', 'Documento', 'N° documento', 'Notas', 'Ítems']];
-    list.forEach(e => rows.push([e.date, e.desc, e.cat, Math.round(+e.amount || 0), e.payer, (e.among || []).join(', '), e.method, e.docType, e.docNum, e.notes, (e.items || []).map(x => `${x.n} (${Units.fmt(x.q, x.u)}${x.price ? ' ' + x.price : ''})`).join(' | ')]));
+    const rows = [['Fecha', 'Descripción', 'Categoría', 'Monto', 'Pagó', 'Repartido entre', 'Método', 'Documento', 'N° documento', 'Notas', 'Ítems', 'Cuentas separadas']];
+    const splitTxt = e => e.split ? Money.splitCalc(e).rows.map(r => `${r.name}: consumió ${Math.round(r.cons)} / aportó ${Math.round(r.paid)}`).join(' | ') : '';
+    list.forEach(e => rows.push([e.date, e.desc, e.cat, Math.round(+e.amount || 0), e.split ? Money.splitCalc(e).rows.filter(r => r.paid).map(r => r.name).join(', ') : e.payer, (e.split ? e.split.people : e.among || []).join(', '), e.method, e.docType, e.docNum, e.notes, (e.items || []).map(x => `${x.n} (${Units.fmt(x.q, x.u)}${x.price ? ' ' + x.price : ''})`).join(' | '), splitTxt(e)]));
     const txt = '﻿' + rows.map(r => r.map(q).join(';')).join('\r\n');
     shareOrDownload(new Blob([txt], { type: 'text/csv;charset=utf-8' }), `gastos-${Catalog.slug(range.label)}.csv`, 'text/csv');
   }

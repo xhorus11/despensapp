@@ -107,6 +107,18 @@ await shot('integrante', go('hogar', `document.querySelector('[data-act="memOpen
 await shot('instalar', go('hogar', `App.installHelp();`));
 await shot('bitacora', go('home', `Actions.hogarLog();`));
 
+// Cuentas separadas (al final para no cambiar la numeración anterior)
+const splitPrep = `
+  const e = Store.state.expenses.find(x => x.desc === 'Lider compra semanal');
+  e.split = { people: ['Ana', 'Pablo', 'Cami'], restWho: [],
+    lines: [ { id: 'l1', n: 'Carne molida', price: 6990, who: [] }, { id: 'l2', n: 'Vino tinto', price: 8990, who: ['Pablo'] },
+             { id: 'l3', n: 'Pan sin gluten', price: 3490, who: ['Cami'] }, { id: 'l4', n: 'Yogur griego', price: 2990, who: ['Ana', 'Cami'] } ],
+    contrib: [ { who: 'Pablo', amount: 30000 }, { who: 'Ana', amount: 15990 } ], t: Store.now() };
+  e.t = Store.now(); Store.commit();`;
+await shot('cuentas-separadas-lista', go('money', splitPrep + ` Actions.moneySplit();`));
+await shot('cuentas-separadas', go('money', `SplitView.open(Store.state.expenses.find(x => x.desc === 'Lider compra semanal').id); setTimeout(() => { document.querySelector('#sheetBody .sheet-content').scrollTop = 330; }, 150);`), 650);
+await shot('cuentas-separadas-resumen', () => { const c = document.querySelector('#sheetBody .sheet-content'); c.scrollTop = c.scrollHeight; }, 500);
+
 await browser.close();
 server.close();
 console.log(`Listo: ${n} capturas en manual/img`);

@@ -29,7 +29,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 - **Mi Lista y Modo Súper**: precio real en el pasillo, ofertas (2×1, 3×2, % de descuento), precio por kilo o litro, comparador de formatos y termómetro de presupuesto. Al cerrar la compra, los productos pasan a la despensa y se crea un borrador de gasto.
 - **Menú y recetario**: 95 recetas escalables por número de personas que revisan la despensa y envían a la lista **solo lo que falta**.
 - **Dietas y salud**: alergias, dietas, condiciones de salud (hipertensión, diabetes, colesterol, gota, embarazo, etc.) y alimentos prohibidos por persona. Antes de usar una receta aparece un aviso, y se proponen versiones aptas (porción aparte o todo el plato).
-- **Finanzas**: presupuesto meta, gastos con foto de boleta (lectura del total con OCR opcional), división de gastos entre integrantes con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
+- **Finanzas**: presupuesto meta, gastos con foto de boleta (lectura del total con OCR opcional), división de gastos entre integrantes, **cuentas separadas por boleta** (por productos, personas externas y aportes de varios pagadores) con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
 - **Hogar compartido**: sincronización en tiempo real entre teléfonos con un código o QR, avisos de actividad y bitácora. Varios hogares en el mismo teléfono.
 - **PWA**: instalable, funciona sin conexión y avisa cuando hay una versión nueva.
 
