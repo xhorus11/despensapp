@@ -98,6 +98,12 @@ const Sync = (() => {
     return db;
   }
 
+  // Token de sesión (anónima) para el intermediario de IA
+  async function idToken() {
+    await ensureFirebase();
+    return firebase.auth().currentUser.getIdToken();
+  }
+
   async function connect(c) {
     setStatus('connecting');
     await ensureFirebase();
@@ -225,7 +231,7 @@ const Sync = (() => {
   }
 
   return {
-    init, create, join, leave, disconnect, switchTo, schedule, push, uploadPhoto, fetchPhoto, deletePhoto, joinLink, configured,
+    init, create, join, leave, idToken, disconnect, switchTo, schedule, push, uploadPhoto, fetchPhoto, deletePhoto, joinLink, configured,
     get code() { return code(); }, get status() { return status; }, label,
   };
 })();

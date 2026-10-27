@@ -1,0 +1,22 @@
+# Intermediario de IA de despensAPP (ver index.mjs).
+# Publicar:      cd worker; npx wrangler@4 deploy
+# Clave secreta: npx wrangler@4 secret put GEMINI_API_KEY   (NO va en este archivo ni en GitHub)
+name = "despensapp-ia"
+main = "index.mjs"
+compatibility_date = "2026-10-01"
+
+[vars]
+ALLOWED_ORIGINS = "https://despensapp.web.app,https://despensapp-eb4a7.web.app,http://localhost:8765,http://127.0.0.1:8765,http://localhost:8792,http://localhost:8790"
+FIREBASE_PROJECT = "despensapp-eb4a7"
+LIMIT_PER_USER = "40"
+LIMIT_TOTAL = "600"
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "LIMITS"
+id = "49fb37a4781b4137a1423998328aa558"   # despensapp-limits
+
+[observability]
+enabled = true

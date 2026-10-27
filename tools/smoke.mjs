@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { startMockAI } from './mock-ai.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.webp': 'image/webp', '.webmanifest': 'application/manifest+json' };
@@ -13,6 +14,8 @@ const server = http.createServer((req, res) => {
   if (!f.startsWith(ROOT) || !fs.existsSync(f)) { res.writeHead(404); res.end(); return; }
   res.writeHead(200, { 'Content-Type': TYPES[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
 }).listen(8792);
+
+const aiSrv = startMockAI(8794);
 
 const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH || 'C:/Program Files/Google/Chrome/Application/chrome.exe', headless: true });
 const page = await browser.newPage();
@@ -28,6 +31,7 @@ await page.goto('http://localhost:8792/index.html', { waitUntil: 'networkidle0' 
 const results = await page.evaluate(async () => {
   const w = ms => new Promise(r => setTimeout(r, ms));
   const $q = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
   const click = s => { const e = $q(s); if (!e) throw new Error('falta ' + s); e.click(); };
   const R = {};
   const check = (k, v) => { R[k] = v; };
@@ -96,6 +100,63 @@ const results = await page.evaluate(async () => {
   check('calculoVisita', Math.abs(vis.cons - (9000 + 21000 / n)) < 1 && vis.paid === 5000);
   check('cuentasClarasIncluyeVisita', Money.balances(Money.list()).some(b => b.member === 'Visita' && b.net < 0));
 
+  // ---- IA (con intermediario simulado) ----
+  window.DESPENSAPP_AI_URL = 'http://localhost:8794';
+  Sync.idToken = async () => 'token-de-prueba';
+  App.render();
+  const fakeFile = async () => { const cv = document.createElement('canvas'); cv.width = 40; cv.height = 60; cv.getContext('2d').fillRect(0, 0, 10, 10); const b = await new Promise(r => cv.toBlob(r, 'image/jpeg')); return new File([b], 'boleta.jpg', { type: 'image/jpeg' }); };
+  const until = async (fn, ms = 4000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (fn()) return true; await w(80); } return false; };
+  const title = () => ($q('.sheet-head h3') || {}).textContent;
+  check('iaVisible', AI.ready() && !!document.querySelector('#view') );
+  // Lista por texto
+  App.go('shop'); Store.state.shop.mode = false; App.render(); await w(50);
+  check('botonListaIA', !!$q('[data-act="aiListOpen"]'));
+  click('[data-act="aiListOpen"]'); await w(150);
+  $q('#aiText').value = '2 kilos de papas y leche sin lactosa'; $q('#aiText').dispatchEvent(new Event('input', { bubbles: true }));
+  click('[data-act="aiListaGo"]');
+  check('listaIARevisa', await until(() => title() === 'Revisa tu lista'));
+  click('[data-act="aiListGo"]'); await w(200);
+  check('listaIAAgrega', !!Store.state.shop.sel['fruver|papa|blanca'] && Object.keys(Store.state.shop.sel).some(k => k.startsWith('lacteos|leche|sin-lactosa')));
+  // Boleta en un gasto
+  App.go('money'); await w(50); click('[data-act="moneyNew"]'); await w(150);
+  check('botonBoletaIA', !!$q('[for="fxAIIn"]'));
+  await Actions.fxAIPhoto({ files: [await fakeFile()], value: '' });
+  check('boletaIARevisa', await until(() => title() === 'Revisa tu boleta'));
+  check('boletaCuadra', !!$q('.ai-check.ok'));
+  click('[data-act="aiUseBoleta"]'); await w(250);
+  check('boletaLlenaGasto', $q('#fxAmount') && +$q('#fxAmount').value === 3190 && $q('#fxDesc').value.startsWith('Lider'));
+  click('[data-act="fxSave"]'); await w(250);
+  const exAI = Store.state.expenses.find(e => e.desc && e.desc.startsWith('Lider Ñuñoa'));
+  check('gastoConProductos', !!exAI && exAI.items.length === 2 && exAI.docNum === '88219' && exAI.photos.length === 1);
+  // Boleta desde la despensa → despensa + gasto
+  const lecheAntes = Pantry.have('lacteos', 'leche', 'descremada', 'un', false).q;
+  await Actions.aiBolFile({ files: [await fakeFile()], value: '' });
+  check('boletaDespensaRevisa', await until(() => title() === 'Revisa tu boleta'));
+  click('[data-act="aiUseBoleta"]'); await w(250);
+  check('boletaADespensa', Pantry.have('lacteos', 'leche', 'descremada', 'un', false).q === lecheAntes + 2 && !!Pantry.get('desayuno|pan|marraqueta'));
+  check('boletaCreaGasto', Store.state.expenses.filter(e => e.notes === 'Leída con IA').length === 1);
+  // Foto del refri
+  await Actions.aiFridgeFile({ files: [await fakeFile()], value: '' });
+  check('refriRevisa', await until(() => title() === 'Revisa el inventario'));
+  click('[data-act="aiListGo"]'); await w(200);
+  check('refriADespensa', Pantry.have('lacteos', 'huevo', 'blanco-grande', 'un', false).q >= 12);
+  // Cuentas separadas: foto → lectura automática → productos para repartir
+  SplitView.openNew(); await w(200);
+  await Actions.spPhoto({ files: [await fakeFile()], value: '' });
+  check('splitIARevisa', await until(() => title() === 'Revisa tu boleta'));
+  click('[data-act="aiUseBoleta"]'); await w(250);
+  check('splitConLineas', $$('.sp-line').length === 2 && +($q('[data-input="spAmount"]') || {}).value === 3190);
+  UI.closeAll(); await w(150);
+  // Chef IA
+  App.go('menu'); await w(50); Actions.aiChef(); await w(150);
+  click('[data-act="chefGo"]');
+  check('chefPropone', await until(() => title() === 'Tortilla de zapallo italiano'));
+  click('[data-act="chefSave"]'); await w(400);
+  const rIA = Object.values(Store.state.recipes).find(r => r.ai);
+  check('chefGuarda', !!rIA && rIA.ings.length === 3 && rIA.ings.every(g => g.c && g.i));
+  check('chefAbreReceta', title() === 'Tortilla de zapallo italiano' && !!$q('[data-act="recSchedule"]'));
+  UI.closeAll(); await w(150);
+
   // Exportes
   App.go('money'); await Exporter.pdf(Money.range('mes')); Exporter.csv(Money.range('mes'));
   return R;
@@ -104,5 +165,5 @@ console.log(results);
 const failed = Object.entries(results).filter(([, v]) => v !== true);
 console.log(errors.length ? 'ERRORES DE PÁGINA: ' + errors.join(' | ') : 'Sin errores de página');
 console.log(failed.length ? 'FALLÓ: ' + failed.map(f => f[0]).join(', ') : 'TODO OK');
-await browser.close(); server.close();
+await browser.close(); server.close(); aiSrv.close();
 process.exit(failed.length || errors.length ? 1 : 0);

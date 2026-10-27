@@ -73,6 +73,13 @@ const HogarView = (() => {
 
       ${syncCard()}
 
+      ${AI.configured() ? `<section class="card">
+        <h4 class="card-title">${ico('sparkles')} Inteligencia artificial</h4>
+        <label class="ai-switch"><input type="checkbox" ${AI.on() ? 'checked' : ''} data-change="aiToggle"><span><b>Funciones con IA</b><small>Leer boletas, inventario por foto, lista por voz y Chef IA.</small></span></label>
+        ${AI.left() != null ? `<p class="hint">${ico('info')} Te quedan <b>${AI.left()}</b> usos de IA por hoy.</p>` : ''}
+        <p class="hint">Solo se envía la foto o el texto de esa acción a un intermediario propio; la clave de la IA no está en la app. Usa el plan gratuito de Google Gemini (que puede usar lo enviado para mejorar sus productos), con respaldo en Cloudflare. La IA solo lee y propone: todo se revisa antes de guardar, y los cálculos (cuentas, dietas, despensa) los hace la app.</p>
+      </section>` : ''}
+
       <section class="card">
         <h4 class="card-title">${ico('history')} Bitácora</h4>
         <button class="btn ghost block" data-act="hogarLog">${ico('list')} Ver actividad del hogar (${Store.state.log.length})</button>
@@ -106,6 +113,7 @@ const HogarView = (() => {
   }
 
   /* ---------- Hogar ---------- */
+  Actions.aiToggle = el => { AI.setOn(el.checked); App.render(); UI.toast(el.checked ? 'Funciones con IA activadas' : 'Funciones con IA desactivadas', { icon: 'sparkles' }); };
   Actions.hogarName = el => { Store.state.household.name = el.value.trim() || 'Mi Hogar'; Store.touchHousehold(); Store.log('hogar', `renombró el hogar a "${Store.state.household.name}"`); Store.commit(); };
   Actions.hogarCur = el => { Store.state.household.currency = el.value; Store.touchHousehold(); Store.commit(); };
 

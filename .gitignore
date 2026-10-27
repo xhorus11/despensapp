@@ -10,3 +10,7 @@ firestore-debug.log
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Caché local de Cloudflare Wrangler
+.wrangler/
+.dev.vars

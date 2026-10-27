@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer-core';
+import { startMockAI } from './mock-ai.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'manual', 'img');
@@ -27,6 +28,7 @@ const server = http.createServer((req, res) => {
   fs.createReadStream(f).pipe(res);
 }).listen(PORT);
 
+const aiSrv = startMockAI(8795);
 const wait = ms => new Promise(r => setTimeout(r, ms));
 fs.mkdirSync(OUT, { recursive: true });
 // Limpia solo las capturas generadas antes (NN-nombre.png/webp)
@@ -74,6 +76,9 @@ await page.evaluate(() => {
   h.diets.Ana = { tags: ['hipertension'], note: '', items: [] };
   h.diets.Cami = { tags: ['celiaco'], note: 'Sin gluten', items: [] };
   h.t = Store.now();
+  // IA con intermediario simulado (respuestas fijas)
+  window.DESPENSAPP_AI_URL = 'http://localhost:8795';
+  Sync.idToken = async () => 'token-de-prueba';
   // Comidas de ejemplo en la semana actual para que el menú no salga vacío
   const d = n => { const x = new Date(); x.setDate(x.getDate() + n); return Money.iso(x); };
   const wk = Money.range('semana');
@@ -119,6 +124,18 @@ await shot('cuentas-separadas-lista', go('money', splitPrep + ` Actions.moneySpl
 await shot('cuentas-separadas', go('money', `SplitView.open(Store.state.expenses.find(x => x.desc === 'Lider compra semanal').id); setTimeout(() => { document.querySelector('#sheetBody .sheet-content').scrollTop = 330; }, 150);`), 650);
 await shot('cuentas-separadas-resumen', () => { const c = document.querySelector('#sheetBody .sheet-content'); c.scrollTop = c.scrollHeight; }, 500);
 
+// Funciones con IA
+const fake = `const cv = document.createElement('canvas'); cv.width = 40; cv.height = 60; cv.getContext('2d').fillRect(0, 0, 10, 10);
+  const file = await new Promise(r => cv.toBlob(b => r(new File([b], 'f.jpg', { type: 'image/jpeg' })), 'image/jpeg'));`;
+await shot('ia-boleta', go('money', `Actions.moneyNew(); (async () => { ${fake} await Actions.fxAIPhoto({ files: [file], value: '' }); })();`), 1500);
+await shot('ia-despensa-opciones', go('pantry', `Actions.aiPantryMenu();`));
+await shot('ia-inventario', go('pantry', `(async () => { ${fake} await Actions.aiFridgeFile({ files: [file], value: '' }); })();`), 1500);
+await shot('ia-lista', go('shop', `Store.state.shop.mode = false; App.render(); Actions.aiListOpen(); setTimeout(() => { const t = document.querySelector('#aiText'); t.value = '2 kilos de papas, leche sin lactosa y algo para el asado'; t.dispatchEvent(new Event('input', { bubbles: true })); }, 100);`), 600);
+await shot('ia-lista-revisa', () => document.querySelector('[data-act="aiListaGo"]').click(), 1500);
+await shot('ia-chef', go('menu', `Actions.aiChef();`));
+await shot('ia-chef-receta', () => document.querySelector('[data-act="chefGo"]').click(), 1500);
+
 await browser.close();
+aiSrv.close();
 server.close();
 console.log(`Listo: ${n} capturas en manual/img`);

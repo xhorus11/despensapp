@@ -80,9 +80,10 @@ const SplitView = (() => {
         ${(e.photos || []).length ? `
           <div class="split-photos">${e.photos.map(id => `<div class="thumb"><img data-photo="${id}" alt="boleta" data-act="fxView" data-id="${id}"></div>`).join('')}
             <label class="thumb add" for="spCam">${ico('camera')}<small>Otra foto</small></label></div>
+          ${AI.ready() ? `<button class="btn ai block" data-act="spAI">${ico('sparkles')} Leer boleta con IA y repartir productos</button>` : ''}
           <button class="btn ghost sm block" data-act="spTogglePhoto">${ico('eye')} ${sp.showPhoto ? 'Ocultar boleta' : 'Ver boleta mientras divido'}</button>
           ${sp.showPhoto ? `<div class="split-photo-big"><img data-photo="${e.photos[0]}" alt="boleta"></div>` : ''}`
-        : `<div class="split-nophoto">${ico('receipt')}<span>Adjunta la boleta como respaldo</span>
+        : `<div class="split-nophoto">${ico('receipt')}<span>Adjunta la boleta como respaldo${AI.ready() ? ' y la IA la leerá' : ''}</span>
             <label class="btn sm primary" for="spCam">${ico('camera')} Cámara</label><label class="btn sm ghost" for="spGal">${ico('image')} Galería</label></div>`}
         <input type="file" id="spCam" accept="image/*" capture="environment" hidden data-change="spPhoto">
         <input type="file" id="spGal" accept="image/*" multiple hidden data-change="spPhoto">
@@ -159,6 +160,26 @@ const SplitView = (() => {
     UI.toast('Procesando foto…', { icon: 'camera' });
     for (const f of files) { try { sp.e.photos = [...(sp.e.photos || []), await Photos.add(f)]; } catch { UI.toast('No se pudo leer la imagen', { type: 'err' }); } }
     el.value = ''; refresh();
+    if (AI.ready() && files.length) Actions.spAI();
+  };
+  // La IA lee la boleta y carga total, datos y productos para repartir
+  Actions.spAI = () => {
+    const id = (sp.e.photos || [])[sp.e.photos.length - 1];
+    if (!id) return;
+    AIView.boleta({ photo: id, dest: 'split', onUse: res => {
+      const prev = +sp.e.amount || 0;
+      sp.e.amount = res.total || sp.e.amount;
+      if (res.desc) sp.e.desc = res.desc;
+      if (res.fecha) sp.e.date = res.fecha;
+      if (res.nDoc) sp.e.docNum = res.nDoc;
+      if (res.categoria) sp.e.cat = res.categoria;
+      sp.e.items = res.items;
+      sp.split.lines = res.items.filter(x => x.price).map(x => ({ id: lid(), n: x.n, price: x.price, who: [] }));
+      if (res.propina) sp.split.lines.push({ id: lid(), n: 'Propina', price: res.propina, who: [] });
+      if (sp.split.contrib.length === 1 && (!sp.split.contrib[0].amount || Math.abs(sp.split.contrib[0].amount - prev) < 0.5)) sp.split.contrib[0].amount = sp.e.amount;
+      refresh();
+      UI.toast('Boleta leída: asigna cada producto a quien lo consumió', { icon: 'sparkles' });
+    } });
   };
   Actions.spDesc = el => { sp.e.desc = el.value; };
   Actions.spDate = el => { sp.e.date = el.value || Money.today(); };

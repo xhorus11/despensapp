@@ -46,6 +46,7 @@ const HomeView = (() => {
       ${exp.length || low.length ? `<section class="card">
         <h4 class="card-title">${ico('bell')} Alertas</h4>
         ${exp.slice(0, 4).map(e => { const d = Pantry.daysTo(e.exp); return `<div class="row slim"><span class="em">${Catalog.item(e.c, e.i).emoji}</span><span class="grow">${esc(Catalog.label(e.c, e.i, e.v))}</span><span class="sem ${Pantry.expState(e)}"><i></i>${d < 0 ? 'vencido' : d === 0 ? 'hoy' : d + ' d'}</span></div>`; }).join('')}
+        ${exp.length && AI.ready() ? `<button class="btn ai block sm" data-act="aiChef">${ico('sparkles')} ¿Qué cocino con lo que vence? (Chef IA)</button>` : ''}
         ${low.length ? `<div class="row slim"><span class="em">📉</span><span class="grow">${low.length} producto${low.length > 1 ? 's' : ''} bajo el mínimo</span><button class="btn sm primary" data-act="pantryLowToList">${ico('cart')} Reponer</button></div>` : ''}
       </section>` : ''}
 

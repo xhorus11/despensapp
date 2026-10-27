@@ -14,3 +14,6 @@ window.FIREBASE_CONFIG = {
   appId: "1:860778305519:web:44484b3d37492dbd0a481a",
   measurementId: "G-VZR862RH4Y"
 };
+
+/* Intermediario de IA (Cloudflare Worker, carpeta worker/). Vacío = funciones de IA ocultas. */
+window.DESPENSAPP_AI_URL = 'https://despensapp-ia.viajapp.workers.dev';

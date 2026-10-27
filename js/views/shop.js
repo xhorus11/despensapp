@@ -54,6 +54,7 @@ const ShopView = (() => {
     ${superMode ? budgetBar(cart) : ''}
     <div class="quick-actions">
       <button class="qa" data-act="shopAdd">${ico('plus')}<span>Catálogo</span></button>
+      ${AI.ready() ? `<button class="qa ai" data-act="aiListOpen">${ico('sparkles')}<span>Escribir o dictar</span></button>` : ''}
       <button class="qa" data-act="shopFromPantry">${ico('pantry')}<span>Desde despensa</span></button>
       <button class="qa" data-act="shopFromMenu">${ico('menu')}<span>Desde menú</span></button>
       <button class="qa" data-act="shopCompare">${ico('scale')}<span>Comparador</span></button>

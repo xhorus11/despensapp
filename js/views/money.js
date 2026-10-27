@@ -99,7 +99,10 @@ const MoneyView = (() => {
       </div>
       <input type="file" id="fxCam" accept="image/*" capture="environment" hidden data-change="fxPhoto">
       <input type="file" id="fxGal" accept="image/*" multiple hidden data-change="fxPhoto">
-      ${fx.photos.length ? `<button class="btn ghost sm block" data-act="fxOcr">${ico('scan')} Leer total desde la boleta (beta)</button>` : ''}
+      ${AI.ready() ? `<div class="ai-box">${fx.photos.length
+          ? `<button class="btn ai block" data-act="fxAI">${ico('sparkles')} Leer boleta con IA</button>`
+          : `<label class="btn ai block" for="fxAIIn">${ico('sparkles')} Foto y leer boleta con IA</label><input type="file" id="fxAIIn" accept="image/*" capture="environment" hidden data-change="fxAIPhoto">`}
+        <small>${fx.aiRead ? `${ico('check')} Boleta leída: ${(fx.items || []).length} productos. Revisa antes de guardar.` : 'La IA anota el monto, la fecha, el N° y cada producto. Después lo puedes corregir.'}</small></div>` : ''}
       <label class="lbl">Notas</label>
       <textarea id="fxNotes" rows="2" placeholder="Descuento con tarjeta, cuotas…">${esc(fx.notes || '')}</textarea>
       ${(fx.items || []).length ? `<details class="items"><summary>${fx.items.length} productos de la compra</summary>
@@ -172,7 +175,7 @@ const MoneyView = (() => {
     if (!(fx.amount > 0)) { UI.toast('Ingresa el monto', { type: 'err' }); return; }
     if (members().length && !fx.among.length) fx.among = members().slice();
     const isNew = fx.isNew;
-    const { isNew: _, removed, ...data } = fx;
+    const { isNew: _, removed, aiRead: __, ...data } = fx;
     data.draft = false; data.t = Store.now();
     if (!data.created) data.created = Store.now();
     const k = Store.state.expenses.findIndex(x => x.id === data.id);
@@ -193,36 +196,28 @@ const MoneyView = (() => {
     Store.commit(); UI.closeAll();
   });
 
-  /* ---------- OCR opcional (Tesseract desde CDN, requiere conexión) ---------- */
-  function loadScript(src) {
-    return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+  /* ---------- Leer boleta con IA (intermediario en worker/) ---------- */
+  function applyBoleta(res) {
+    fx.amount = res.total || fx.amount;
+    if (res.desc) fx.desc = res.desc;
+    if (res.fecha) fx.date = res.fecha;
+    if (res.nDoc) fx.docNum = res.nDoc;
+    if (res.tipoDoc) fx.docType = res.tipoDoc === 'Ticket' ? 'Ticket' : res.tipoDoc;
+    if (res.medioPago && Money.METHODS.includes(res.medioPago)) fx.method = res.medioPago;
+    if (res.categoria) fx.cat = res.categoria;
+    fx.items = res.items.concat(res.propina ? [{ n: 'Propina', q: 1, u: 'un', price: res.propina }] : []);
+    fx.aiRead = true;
+    UI.refresh(); Photos.hydrate();
+    UI.toast('Datos de la boleta cargados: revisa y guarda', { icon: 'sparkles' });
   }
-  function parseCLP(s) { return parseInt(String(s).replace(/[^\d]/g, ''), 10) || 0; }
-  Actions.fxOcr = async el => {
+  Actions.fxAI = () => { fxRead(); const id = fx.photos[fx.photos.length - 1]; if (id) AIView.boleta({ photo: id, dest: 'gasto', onUse: applyBoleta }); };
+  Actions.fxAIPhoto = async el => {
     fxRead();
-    if (!navigator.onLine) { UI.toast('La lectura de boletas necesita internet', { type: 'err' }); return; }
-    el.disabled = true; el.innerHTML = `${ico('sync', 'spin')} Leyendo boleta…`;
-    try {
-      if (!window.Tesseract) await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5.1.0/dist/tesseract.min.js');
-      const blob = await Photos.get(fx.photos[fx.photos.length - 1]);
-      const { data } = await Tesseract.recognize(blob, 'spa');
-      const text = data.text || '';
-      const lines = text.split('\n');
-      let total = 0;
-      lines.forEach(l => { if (/total/i.test(l) && !/sub\s*total/i.test(l)) { const m = l.match(/\$?\s*([\d]{1,3}(?:[.,]\d{3})+|\d{3,7})/g); if (m) total = Math.max(total, parseCLP(m[m.length - 1])); } });
-      if (!total) { const all = (text.match(/\$\s*[\d]{1,3}(?:[.,]\d{3})+/g) || []).map(parseCLP); if (all.length) total = Math.max(...all); }
-      const folio = text.match(/(?:boleta|folio|n[°ºo]\.?)\D{0,12}(\d{3,10})/i);
-      const date = text.match(/(\d{2})[\/-](\d{2})[\/-](\d{2,4})/);
-      if (total) fx.amount = total;
-      if (folio && !fx.docNum) fx.docNum = folio[1];
-      if (date) { const y = date[3].length === 2 ? '20' + date[3] : date[3]; const iso = `${y}-${date[2]}-${date[1]}`; if (!isNaN(new Date(iso))) fx.date = iso; }
-      UI.refresh(); Photos.hydrate();
-      UI.toast(total ? `Total detectado: ${Money.fmt(total)} — revísalo` : 'No encontramos el total, ingrésalo a mano', { icon: 'scan', type: total ? '' : 'err' });
-    } catch (e) {
-      console.warn(e);
-      UI.toast('No se pudo leer la boleta', { type: 'err' });
-      el.disabled = false; el.innerHTML = `${ico('scan')} Leer total desde la boleta (beta)`;
-    }
+    const f = el.files && el.files[0]; el.value = '';
+    if (!f) return;
+    try { fx.photos.push(await Photos.add(f)); } catch { UI.toast('No se pudo leer la imagen', { type: 'err' }); return; }
+    UI.refresh(); Photos.hydrate();
+    AIView.boleta({ photo: fx.photos[fx.photos.length - 1], dest: 'gasto', onUse: applyBoleta });
   };
 
   /* ---------- Presupuesto ---------- */

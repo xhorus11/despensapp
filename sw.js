@@ -2,11 +2,11 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v1.2.0';
+const VERSION = 'despensapp-v1.3.0';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
-  './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/sync.js', './js/export.js',
-  './js/views/picker.js', './js/views/home.js', './js/views/pantry.js', './js/views/shop.js', './js/views/menu.js', './js/views/money.js', './js/views/split.js', './js/views/hogar.js', './js/app.js',
+  './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/sync.js', './js/export.js', './js/ai.js',
+  './js/views/picker.js', './js/views/home.js', './js/views/pantry.js', './js/views/shop.js', './js/views/menu.js', './js/views/money.js', './js/views/split.js', './js/views/ai.js', './js/views/hogar.js', './js/app.js',
 ];
 const STATIC = [
   './vendor/qrcode.min.js', './vendor/jsQR.js', './vendor/jspdf.umd.min.js', './vendor/jspdf.plugin.autotable.min.js', './vendor/html2canvas.min.js',
@@ -28,7 +28,7 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
   // Firestore / Auth / APIs de Google: siempre red (el SDK maneja su propio offline)
-  if (/googleapis\.com|firebaseio\.com|identitytoolkit|securetoken/.test(url.hostname)) return;
+  if (/googleapis\.com|firebaseio\.com|identitytoolkit|securetoken|workers\.dev/.test(url.hostname)) return;
 
   const sameOrigin = url.origin === location.origin;
   const isStatic = sameOrigin ? /\/(vendor|icons|img)\//.test(url.pathname) : /cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|tessdata|unpkg\.com/.test(url.hostname);

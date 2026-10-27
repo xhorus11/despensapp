@@ -38,6 +38,7 @@ const MenuView = (() => {
         <div><b>${label}</b><small>${UI.fmtDate(days[0], { day: 'numeric', month: 'short' })} – ${UI.fmtDate(days[6], { day: 'numeric', month: 'short' })}</small></div>
         <button class="icon-btn" data-act="menuWeek" data-d="1">${ico('chevR')}</button>
       </div>
+      ${AI.ready() ? `<button class="btn ai block sm" data-act="aiChef">${ico('sparkles')} Chef IA: ¿qué cocino con lo que hay?</button>` : ''}
       <button class="btn ghost block sm" data-act="menuWeekMissing">${ico('send')} Enviar faltantes de la semana a Mi Lista</button>
       ${days.map(d => {
         const meals = Store.state.menu.filter(m => !m.del && m.date === d).sort((a, b) => TYPES.indexOf(a.type) - TYPES.indexOf(b.type));
@@ -69,6 +70,7 @@ const MenuView = (() => {
     return `
       <div class="toolbar">
         <div class="search-box">${ico('search')}<input type="search" placeholder="Receta o ingrediente…" value="${esc(st.q)}" data-input="menuSearch"></div>
+        ${AI.ready() ? `<button class="icon-btn ai" data-act="aiChef" aria-label="Chef IA">${ico('sparkles')}</button>` : ''}
         <button class="icon-btn" data-act="recNew" aria-label="Nueva receta">${ico('plus')}</button>
       </div>
       <div class="chips scroll">

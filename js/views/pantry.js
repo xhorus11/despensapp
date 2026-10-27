@@ -55,6 +55,7 @@ const PantryView = (() => {
       </div>` : ''}
     <div class="toolbar">
       <div class="search-box">${ico('search')}<input type="search" placeholder="Buscar en la despensa" value="${esc(f.q)}" data-input="pantrySearch"></div>
+      ${AI.ready() ? `<button class="icon-btn ai" data-act="aiPantryMenu" aria-label="Agregar con IA">${ico('sparkles')}</button>` : ''}
       <button class="icon-btn" data-act="pantryExport" aria-label="Exportar">${ico('share')}</button>
     </div>
     <div class="chips scroll">

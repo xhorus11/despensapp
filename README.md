@@ -31,6 +31,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 - **Dietas y salud**: alergias, dietas, condiciones de salud (hipertensión, diabetes, colesterol, gota, embarazo, etc.) y alimentos prohibidos por persona. Antes de usar una receta aparece un aviso, y se proponen versiones aptas (porción aparte o todo el plato).
 - **Finanzas**: presupuesto meta, gastos con foto de boleta (lectura del total con OCR opcional), división de gastos entre integrantes, **cuentas separadas por boleta** (por productos, personas externas y aportes de varios pagadores) con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
 - **Hogar compartido**: sincronización en tiempo real entre teléfonos con un código o QR, avisos de actividad y bitácora. Varios hogares en el mismo teléfono.
+- **Funciones con IA** (opcionales, siempre con revisión antes de guardar): leer boletas (local, fecha, N°, total, propina y productos con nombres legibles), pasar una boleta a la despensa, inventario desde una foto del refrigerador, lista escrita o dictada y **Chef IA** con lo que está por vencer respetando dietas y salud.
 - **PWA**: instalable, funciona sin conexión y avisa cuando hay una versión nueva.
 
 ## Stack y arquitectura
@@ -41,6 +42,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 | Persistencia local | `localStorage` (estado por hogar) + IndexedDB (fotos comprimidas a 1600 px) |
 | Sincronización | Firebase Firestore + Auth anónima; merge por entidad (last-writer-wins con lápidas) |
 | Offline | Service Worker: network-first para archivos propios, cache-first para estáticos |
+| IA | Cloudflare Worker propio (`worker/`): verifica la sesión de Firebase, limita usos diarios (KV) y llama a Gemini Flash Lite con respaldo en Workers AI (Llama 4 Scout). La clave vive solo en el Worker. |
 | Exportación | jsPDF + autotable, html2canvas, QR (qrcode.js / jsQR) |
 | Herramientas | Puppeteer: capturas del manual y prueba de humo |
 
@@ -54,6 +56,8 @@ js/
   export.js    PDF, CSV y PNG
   ui.js        Hojas inferiores, toasts, confirmación en dos toques
   views/       Inicio, Despensa, Lista, Menú, Plata, Hogar, selector de catálogo
+  ai.js        Cliente de IA: envío de foto/texto y conversión al catálogo (sin IA)
+worker/        Intermediario de IA (Cloudflare Worker): index.mjs, tasks.mjs, wrangler.toml
 manual/        Manual de uso con capturas
 tools/         shots.mjs (capturas) y smoke.mjs (prueba de humo)
 ```
@@ -80,9 +84,21 @@ Sin configurar Firebase, la app funciona completa en un solo dispositivo.
 
 ```bash
 cd tools && npm install
-node smoke.mjs        # prueba de humo de los flujos principales en Chrome
+node smoke.mjs        # prueba de humo de los flujos principales en Chrome (IA simulada)
+node test-worker.mjs  # prueba del intermediario de IA sin red ni cuota
 npm run shots         # regenera las capturas de manual/img
 ```
+
+## IA (opcional)
+
+```bash
+cd worker
+npx wrangler@4 kv namespace create LIMITS     # copia el id en wrangler.toml
+npx wrangler@4 deploy
+npx wrangler@4 secret put GEMINI_API_KEY      # clave de Google AI Studio (gratis)
+```
+
+Luego pon la URL del Worker (hoy `https://despensapp-ia.viajapp.workers.dev`) en `window.DESPENSAPP_AI_URL` (`firebase-config.js`). Sin URL, los botones de IA no aparecen.
 
 ## Despliegue
 
