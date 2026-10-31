@@ -167,7 +167,7 @@ const Sync = (() => {
     Store.commit();
     await push();
     // subir fotos existentes
-    Store.state.expenses.forEach(e => (e.photos || []).forEach(async id => { const b = await Photos.get(id); if (b) uploadPhoto(id, b); }));
+    Store.state.expenses.forEach(e => [...(e.photos || []), ...(e.files || []).filter(f => !f.local).map(f => f.id)].forEach(async id => { const b = await Photos.get(id); if (b) uploadPhoto(id, b); }));
     return c;
   }
 

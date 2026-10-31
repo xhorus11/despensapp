@@ -59,7 +59,7 @@ const MoneyView = (() => {
         <div class="list">${groups[d].map(e => `<button class="row card-row exp-row" data-act="moneyEdit" data-id="${e.id}">
           <span class="em">${Money.catEmoji(e.cat)}</span>
           <span class="grow"><b>${esc(e.desc || e.cat)}</b><small>${esc(e.cat)}${e.payer ? ' · pagó ' + esc(e.payer) : ''}${e.method ? ' · ' + esc(e.method) : ''}</small>
-            ${e.draft ? `<span class="pill warn">borrador</span>` : ''}${(e.photos || []).length ? `<span class="pill">${ico('camera')} ${e.photos.length}</span>` : ''}${(e.items || []).length ? `<span class="pill">${e.items.length} ítems</span>` : ''}${e.split ? `<span class="pill ok">${ico('users')} dividida</span>` : ''}</span>
+            ${e.draft ? `<span class="pill warn">borrador</span>` : ''}${(e.photos || []).length ? `<span class="pill">${ico('camera')} ${e.photos.length}</span>` : ''}${(e.files || []).length ? `<span class="pill">${ico('file')} ${e.files.map(f => f.kind.toUpperCase()).join(', ')}</span>` : ''}${(e.items || []).length ? `<span class="pill">${e.items.length} ítems</span>` : ''}${e.split ? `<span class="pill ok">${ico('users')} dividida</span>` : ''}</span>
           <b class="amt">${Money.fmt(e.amount)}</b></button>`).join('')}</div>`).join('')
         : UI.empty('receipt', 'Sin gastos en este período', 'Registra una boleta o cierra una compra del súper para crear un gasto automáticamente.')}
       <button class="fab" data-act="moneyNew" aria-label="Nuevo gasto">${ico('plus')}</button>`;
@@ -91,16 +91,19 @@ const MoneyView = (() => {
         ${UI.chips(mem, fx.among, 'fxAmong')}
         ${fx.among.length && fx.amount ? `<p class="hint">${Money.fmt((parseFloat(fx.amount) || 0) / fx.among.length)} c/u</p>` : ''}`
         : `<div class="info">${ico('users')} Agrega integrantes en <a data-act="goTab" data-val="hogar">Hogar</a> para dividir gastos.</div>`}
-      <label class="lbl">${ico('camera')} Foto de boleta</label>
+      <label class="lbl">${ico('receipt')} Boleta <small class="hint">(foto, PDF o Word)</small></label>
+      ${fx.files.length ? `<div class="doc-list">${fx.files.map((m, k) => Docs.cardHtml(m, 'fxDelDoc', k)).join('')}</div>` : ''}
       <div class="thumbs">
         ${fx.photos.map((id, k) => `<div class="thumb"><img data-photo="${id}" alt="boleta" data-act="fxView" data-id="${id}"><button class="icon-btn xs" data-act="fxDelPhoto" data-k="${k}">${ico('x')}</button></div>`).join('')}
         <label class="thumb add" for="fxCam">${ico('camera')}<small>Cámara</small></label>
         <label class="thumb add" for="fxGal">${ico('image')}<small>Galería</small></label>
+        <label class="thumb add doc" for="fxDocIn">${ico('file')}<small>PDF / Word</small></label>
       </div>
       <input type="file" id="fxCam" accept="image/*" capture="environment" hidden data-change="fxPhoto">
       <input type="file" id="fxGal" accept="image/*" multiple hidden data-change="fxPhoto">
-      ${AI.ready() ? `<div class="ai-box">${fx.photos.length
-          ? `<button class="btn ai block" data-act="fxAI">${ico('sparkles')} Leer boleta con IA</button>`
+      <input type="file" id="fxDocIn" accept="${Docs.ACCEPT}" multiple hidden data-change="fxDoc">
+      ${AI.ready() ? `<div class="ai-box">${fx.photos.length || fx.files.length
+          ? `<button class="btn ai block" data-act="fxAI">${ico('sparkles')} Leer boleta con IA${fx.photos.length && fx.files.length ? '' : fx.files.length ? ` (${fx.files[fx.files.length - 1].kind.toUpperCase()})` : ''}</button>`
           : `<label class="btn ai block" for="fxAIIn">${ico('sparkles')} Foto y leer boleta con IA</label><input type="file" id="fxAIIn" accept="image/*" capture="environment" hidden data-change="fxAIPhoto">`}
         <small>${fx.aiRead ? `${ico('check')} Boleta leída: ${(fx.items || []).length} productos. Revisa antes de guardar.` : 'La IA anota el monto, la fecha, el N° y cada producto. Después lo puedes corregir.'}</small></div>` : ''}
       <label class="lbl">Notas</label>
@@ -125,7 +128,8 @@ const MoneyView = (() => {
       payer: Store.me() && mem.includes(Store.me()) ? Store.me() : mem[0] || '', among: mem.slice(),
       method: 'Débito', docType: 'Boleta', docNum: '', photos: [], notes: '', items: [], isNew: true,
     };
-    fx.photos = fx.photos || []; fx.among = fx.among || [];
+    fx.photos = fx.photos || []; fx.among = fx.among || []; fx.files = fx.files || [];
+    Docs._pending = fx.files;
     UI.open(fx.isNew ? 'Nuevo gasto' : 'Editar gasto', fxSheet, b => Photos.hydrate(b), { tall: true });
   }
   function edit(id) { const e = Store.state.expenses.find(x => x.id === id); if (e) openFx(e); }
@@ -146,10 +150,24 @@ const MoneyView = (() => {
     const files = [...(el.files || [])];
     if (!files.length) return;
     UI.toast('Procesando foto…', { icon: 'camera' });
-    for (const f of files) { try { fx.photos.push(await Photos.add(f)); } catch (e) { UI.toast('No se pudo leer la imagen', { type: 'err' }); } }
+    for (const f of files) { try { fx.photos.push(await Photos.add(f)); fx.last = null; } catch (e) { UI.toast('No se pudo leer la imagen', { type: 'err' }); } }
     el.value = '';
     UI.refresh(); Photos.hydrate();
   };
+  Actions.fxDoc = async el => {
+    fxRead();
+    const files = [...(el.files || [])]; el.value = '';
+    if (!files.length) return;
+    let added = null;
+    for (const f of files) {
+      try { added = await Docs.add(f); fx.files.push(added); fx.last = added; if (added.local) UI.toast('Archivo grande: queda solo en este teléfono (no se comparte con el hogar)', { type: 'err', ms: 4500 }); }
+      catch (e) { UI.toast(esc(e.message), { type: 'err' }); }
+    }
+    Docs._pending = fx.files;
+    UI.refresh(); Photos.hydrate();
+    if (added) UI.toast(`${esc(added.name)} adjuntado`, { icon: 'file' });
+  };
+  Actions.fxDelDoc = el => { fxRead(); const [m] = fx.files.splice(+el.dataset.k, 1); if (fx.last === m) fx.last = null; fx.removed = [...(fx.removed || []), m.id]; UI.refresh(); Photos.hydrate(); };
   Actions.fxDelPhoto = el => { fxRead(); const [id] = fx.photos.splice(+el.dataset.k, 1); fx.removed = [...(fx.removed || []), id]; UI.refresh(); Photos.hydrate(); };
   Actions.fxView = async el => {
     const u = await Photos.url(el.dataset.id);
@@ -160,7 +178,7 @@ const MoneyView = (() => {
   Actions.fxSplit = () => {
     fxRead();
     if (!(fx.amount > 0)) { UI.toast('Primero ingresa el monto de la boleta', { type: 'err' }); return; }
-    const { isNew: _, removed, ...data } = fx;
+    const { isNew: _, removed, aiRead: __, last: ___, ...data } = fx;
     data.draft = false; data.t = Store.now(); if (!data.created) data.created = Store.now();
     if (!data.among || !data.among.length) data.among = members().slice();
     const k = Store.state.expenses.findIndex(x => x.id === data.id);
@@ -175,7 +193,7 @@ const MoneyView = (() => {
     if (!(fx.amount > 0)) { UI.toast('Ingresa el monto', { type: 'err' }); return; }
     if (members().length && !fx.among.length) fx.among = members().slice();
     const isNew = fx.isNew;
-    const { isNew: _, removed, aiRead: __, ...data } = fx;
+    const { isNew: _, removed, aiRead: __, last: ___, ...data } = fx;
     data.draft = false; data.t = Store.now();
     if (!data.created) data.created = Store.now();
     const k = Store.state.expenses.findIndex(x => x.id === data.id);
@@ -191,7 +209,7 @@ const MoneyView = (() => {
     const e = Store.state.expenses.find(x => x.id === fx.id);
     Store.state.expenses = Store.state.expenses.filter(x => x.id !== fx.id);
     Store.tomb('e:' + fx.id);
-    (e && e.photos || []).forEach(id => { Photos.del(id); Sync.deletePhoto(id); });
+    [...(e && e.photos || []), ...(e && e.files || []).map(f => f.id)].forEach(id => { Photos.del(id); Sync.deletePhoto(id); });
     Store.log('money', `eliminó un gasto de ${Money.fmt(e ? e.amount : 0)}`);
     Store.commit(); UI.closeAll();
   });
@@ -210,7 +228,12 @@ const MoneyView = (() => {
     UI.refresh(); Photos.hydrate();
     UI.toast('Datos de la boleta cargados: revisa y guarda', { icon: 'sparkles' });
   }
-  Actions.fxAI = () => { fxRead(); const id = fx.photos[fx.photos.length - 1]; if (id) AIView.boleta({ photo: id, dest: 'gasto', onUse: applyBoleta }); };
+  // Lee el último adjunto: el archivo recién subido, si no la última foto, si no el último archivo
+  Actions.fxAI = () => {
+    fxRead();
+    const src = fx.last || fx.photos[fx.photos.length - 1] || fx.files[fx.files.length - 1];
+    if (src) AIView.boleta({ photo: src, dest: 'gasto', onUse: applyBoleta });
+  };
   Actions.fxAIPhoto = async el => {
     fxRead();
     const f = el.files && el.files[0]; el.value = '';

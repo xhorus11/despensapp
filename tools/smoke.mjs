@@ -147,6 +147,38 @@ const results = await page.evaluate(async () => {
   click('[data-act="aiUseBoleta"]'); await w(250);
   check('splitConLineas', $$('.sp-line').length === 2 && +($q('[data-input="spAmount"]') || {}).value === 3190);
   UI.closeAll(); await w(150);
+  // Boletas digitales (PDF y Word)
+  const fixture = async (name, type) => new File([await (await fetch('/tools/fixtures/' + name)).blob()], name, { type });
+  const pdfF = await fixture('boleta-lider.pdf', 'application/pdf');
+  const docxF = await fixture('boleta-farmacia.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  const docxTxt = await Docs.docxText(docxF);
+  check('wordTexto', docxTxt.includes('TOTAL $10.529') && docxTxt.split('\n').length >= 10);
+  const pdfImg = await Docs.pdfToImage(pdfF, 2, 600);
+  check('pdfAImagen', pdfImg && pdfImg.type === 'image/jpeg' && pdfImg.size > 5000);
+  App.go('money'); await w(50); click('[data-act="moneyNew"]'); await w(150);
+  check('botonArchivo', !!$q('[for="fxDocIn"]'));
+  await Actions.fxDoc({ files: [pdfF], value: '' }); await w(150);
+  check('pdfAdjunto', !!$q('.doc-card .doc-ico.pdf'));
+  click('.doc-card');
+  check('visorPdf', await until(() => !!$q('.doc-page'), 8000));
+  UI.close(); await w(200);
+  click('[data-act="fxAI"]');
+  check('pdfLeidoIA', await until(() => title() === 'Revisa tu boleta', 8000));
+  click('[data-act="aiUseBoleta"]'); await w(250);
+  click('[data-act="fxSave"]'); await w(300);
+  const exPdf = Store.state.expenses.find(e => (e.files || []).some(f => f.kind === 'pdf'));
+  check('gastoConPdf', !!exPdf && exPdf.files[0].name === 'boleta-lider.pdf' && exPdf.amount === 3190);
+  const wordMeta = await Docs.add(docxF);
+  const body = await AI.attachBody(wordMeta);
+  check('wordSeEnviaComoTexto', !!body.text && !body.image && body.text.includes('LECHE DESC'));
+  await Actions.aiBolFile({ files: [docxF], value: '' });
+  check('wordDesdeDespensa', await until(() => title() === 'Revisa tu boleta', 6000));
+  click('[data-act="aiUseBoleta"]'); await w(300);
+  check('gastoConWord', Store.state.expenses.some(e => (e.files || []).some(f => f.kind === 'docx') && e.notes === 'Leída con IA'));
+  let docErr = '';
+  try { await Docs.add(new File(['x'], 'viejo.doc', { type: 'application/msword' })); } catch (e) { docErr = e.message; }
+  check('docAntiguoRechazado', docErr.includes('.docx'));
+
   // Chef IA
   App.go('menu'); await w(50); Actions.aiChef(); await w(150);
   click('[data-act="chefGo"]');

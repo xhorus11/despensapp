@@ -195,6 +195,7 @@ export function check(r) {
 
 /* Texto de entrada para las tareas sin imagen */
 export function userText(task, body) {
+  if (task === 'boleta') return `No hay imagen: es una boleta digital. Este es su texto, copiado de un documento:\n"""${s(body.text, 12000)}"""`;
   if (task === 'lista') return `Texto de la persona:\n"""${s(body.text, 1500)}"""`;
   if (task === 'receta') {
     const list = (a, max) => (Array.isArray(a) ? a : []).slice(0, max).map(x => s(x, 80)).filter(Boolean);

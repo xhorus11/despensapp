@@ -55,9 +55,10 @@ const AIView = (() => {
   async function boleta(opts) {
     if (!can()) return;
     rv = { kind: 'boleta', dest: opts.dest, onUse: opts.onUse, retry: () => boleta(opts) };
-    const my = loading('Leyendo tu boleta…', 'La IA está leyendo el local, la fecha, los productos y los precios.', 'la foto de la boleta');
+    const isDoc = opts.photo && opts.photo.kind;
+    const my = loading('Leyendo tu boleta…', 'La IA está leyendo el local, la fecha, los productos y los precios.', isDoc ? (opts.photo.kind === 'pdf' ? 'la primera página del PDF' : 'el texto del documento') : 'la foto de la boleta');
     try {
-      const j = await AI.call('boleta', await AI.photoBody(opts.photo));
+      const j = await AI.call('boleta', await AI.attachBody(opts.photo));
       if (!alive(my)) return;
       const d = j.data;
       rv = {
@@ -318,7 +319,9 @@ const AIView = (() => {
   Actions.aiPantryMenu = () => {
     if (!can()) return;
     UI.open('Agregar con IA', () => `
-      <label class="ai-opt" for="aiBolIn"><span class="ai-opt-ico">${ico('receipt')}</span><span><b>Boleta del súper</b><small>Pasa lo comprado a la despensa y, si quieres, registra el gasto.</small></span>${ico('chevR', 'muted')}</label>
+      <label class="ai-opt" for="aiBolIn"><span class="ai-opt-ico">${ico('receipt')}</span><span><b>Boleta del súper (foto)</b><small>Pasa lo comprado a la despensa y, si quieres, registra el gasto.</small></span>${ico('chevR', 'muted')}</label>
+      <label class="ai-opt" for="aiBolDocIn"><span class="ai-opt-ico">${ico('file')}</span><span><b>Boleta digital (PDF o Word)</b><small>La que te llegó por correo o descargaste del súper o el SII.</small></span>${ico('chevR', 'muted')}</label>
+      <input type="file" id="aiBolDocIn" accept="${Docs.ACCEPT}" hidden data-change="aiBolFile">
       <label class="ai-opt" for="aiFridgeIn"><span class="ai-opt-ico">${ico('camera')}</span><span><b>Foto del refri o la despensa</b><small>La IA reconoce los productos y te propone el inventario.</small></span>${ico('chevR', 'muted')}</label>
       <input type="file" id="aiBolIn" accept="image/*" capture="environment" hidden data-change="aiBolFile">
       <input type="file" id="aiFridgeIn" accept="image/*" capture="environment" hidden data-change="aiFridgeFile">
@@ -329,17 +332,19 @@ const AIView = (() => {
     const f = el.files && el.files[0]; el.value = '';
     if (!f) return;
     UI.close();
-    let photoId = null;
-    try { photoId = await Photos.add(f); } catch { UI.toast('No se pudo leer la imagen', { type: 'err' }); return; }
+    let photoId = null, docMeta = null;
+    try {
+      if (Docs.isDoc(f)) docMeta = await Docs.add(f); else photoId = await Photos.add(f);
+    } catch (e) { UI.toast(esc(e.message || 'No se pudo leer el archivo'), { type: 'err' }); return; }
     boleta({
-      photo: photoId, dest: 'despensa', onUse: res => {
+      photo: docMeta || photoId, dest: 'despensa', onUse: res => {
         if (res.expense) {
           const mem = Store.state.household.members;
           const me = Store.me() && mem.includes(Store.me()) ? Store.me() : mem[0] || '';
           const items = res.items.concat(res.propina ? [{ n: 'Propina', q: 1, u: 'un', price: res.propina }] : []);
           Store.state.expenses.unshift({
             id: Store.uid('exp_'), amount: res.total, cat: res.categoria, desc: res.desc, date: res.fecha || Money.today(), payer: me, among: mem.slice(),
-            method: res.medioPago || 'Débito', docType: res.tipoDoc || 'Boleta', docNum: res.nDoc, photos: [photoId], notes: 'Leída con IA', items, created: Store.now(), t: Store.now(),
+            method: res.medioPago || 'Débito', docType: res.tipoDoc || 'Boleta', docNum: res.nDoc, photos: photoId ? [photoId] : [], files: docMeta ? [docMeta] : [], notes: 'Leída con IA', items, created: Store.now(), t: Store.now(),
           });
           Store.log('money', `registró una boleta de ${Money.fmt(res.total)} leída con IA`);
           UI.toast(`Gasto de ${Money.fmt(res.total)} registrado en Plata`, { icon: 'receipt' });

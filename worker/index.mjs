@@ -55,7 +55,9 @@ export default {
     try { body = await req.json(); } catch (e) { return out(400, { ok: false, error: 'Solicitud no válida' }); }
     const T = TASKS[task];
     let b64 = '', mime = 'image/jpeg', text = '';
-    if (T.image) {
+    if (task === 'boleta' && !body.image && String(body.text || '').trim()) {
+      text = userText(task, body);   // boleta digital en Word: llega el texto, no una imagen
+    } else if (T.image) {
       b64 = String(body.image || '').replace(/^data:[^,]+,/, '');
       mime = /^image\/(jpeg|png|webp)$/.test(body.mime) ? body.mime : 'image/jpeg';
       if (!b64 || b64.length > MAX_B64) return out(413, { ok: false, error: 'La foto es muy grande o no llegó. Intenta con otra foto.' });

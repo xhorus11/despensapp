@@ -23,6 +23,7 @@ const SplitView = (() => {
     const e = Store.state.expenses.find(x => x.id === id);
     if (!e) return;
     sp = { id, isNew: false, e: JSON.parse(JSON.stringify(e)), split: initialSplit(e), showPhoto: false };
+    Docs._pending = sp.e.files || [];
     UI.open('Cuentas separadas', render, b => Photos.hydrate(b), { tall: true });
   }
   function openNew() {
@@ -42,7 +43,7 @@ const SplitView = (() => {
       <button class="btn primary block" data-act="splitNew">${ico('plus')} Nueva boleta dividida</button>
       <div class="list">${list.map(e => `<button class="row card-row" data-act="splitOpen" data-id="${e.id}">
           <span class="em">${Money.catEmoji(e.cat)}</span>
-          <span class="grow"><b>${esc(e.desc || e.cat)}</b><small>${UI.fmtDate(e.date)}${(e.photos || []).length ? ' · con boleta' : ''}${(e.items || []).length ? ` · ${e.items.length} productos` : ''}</small>
+          <span class="grow"><b>${esc(e.desc || e.cat)}</b><small>${UI.fmtDate(e.date)}${(e.photos || []).length || (e.files || []).length ? ' · con boleta' : ''}${(e.items || []).length ? ` · ${e.items.length} productos` : ''}</small>
             ${e.split ? `<span class="pill ok">${ico('users')} dividida entre ${e.split.people.length}</span>` : ''}</span>
           <b class="amt">${Money.fmt(e.amount)}</b></button>`).join('') || UI.empty('receipt', 'Sin boletas', 'Registra un gasto o crea una boleta dividida.')}</div>`, null, { tall: true });
   }
@@ -77,16 +78,19 @@ const SplitView = (() => {
     const e = sp.e, s = sp.split;
     return `
       <section class="split-receipt">
-        ${(e.photos || []).length ? `
-          <div class="split-photos">${e.photos.map(id => `<div class="thumb"><img data-photo="${id}" alt="boleta" data-act="fxView" data-id="${id}"></div>`).join('')}
-            <label class="thumb add" for="spCam">${ico('camera')}<small>Otra foto</small></label></div>
+        ${(e.files || []).length ? `<div class="doc-list">${e.files.map((m, k) => Docs.cardHtml(m, 'spDelDoc', k)).join('')}</div>` : ''}
+        ${(e.photos || []).length || (e.files || []).length ? `
+          <div class="split-photos">${(e.photos || []).map(id => `<div class="thumb"><img data-photo="${id}" alt="boleta" data-act="fxView" data-id="${id}"></div>`).join('')}
+            <label class="thumb add" for="spCam">${ico('camera')}<small>Foto</small></label>
+            <label class="thumb add doc" for="spDocIn">${ico('file')}<small>PDF / Word</small></label></div>
           ${AI.ready() ? `<button class="btn ai block" data-act="spAI">${ico('sparkles')} Leer boleta con IA y repartir productos</button>` : ''}
-          <button class="btn ghost sm block" data-act="spTogglePhoto">${ico('eye')} ${sp.showPhoto ? 'Ocultar boleta' : 'Ver boleta mientras divido'}</button>
-          ${sp.showPhoto ? `<div class="split-photo-big"><img data-photo="${e.photos[0]}" alt="boleta"></div>` : ''}`
+          ${(e.photos || []).length ? `<button class="btn ghost sm block" data-act="spTogglePhoto">${ico('eye')} ${sp.showPhoto ? 'Ocultar boleta' : 'Ver boleta mientras divido'}</button>` : ''}
+          ${sp.showPhoto && (e.photos || []).length ? `<div class="split-photo-big"><img data-photo="${e.photos[0]}" alt="boleta"></div>` : ''}`
         : `<div class="split-nophoto">${ico('receipt')}<span>Adjunta la boleta como respaldo${AI.ready() ? ' y la IA la leerá' : ''}</span>
-            <label class="btn sm primary" for="spCam">${ico('camera')} Cámara</label><label class="btn sm ghost" for="spGal">${ico('image')} Galería</label></div>`}
+            <label class="btn sm primary" for="spCam">${ico('camera')} Cámara</label><label class="btn sm ghost" for="spGal">${ico('image')} Galería</label><label class="btn sm ghost" for="spDocIn">${ico('file')} PDF / Word</label></div>`}
         <input type="file" id="spCam" accept="image/*" capture="environment" hidden data-change="spPhoto">
         <input type="file" id="spGal" accept="image/*" multiple hidden data-change="spPhoto">
+        <input type="file" id="spDocIn" accept="${Docs.ACCEPT}" hidden data-change="spDoc">
       </section>
 
       <div class="grid2">
@@ -158,13 +162,25 @@ const SplitView = (() => {
     const files = [...(el.files || [])];
     if (!files.length) return;
     UI.toast('Procesando foto…', { icon: 'camera' });
-    for (const f of files) { try { sp.e.photos = [...(sp.e.photos || []), await Photos.add(f)]; } catch { UI.toast('No se pudo leer la imagen', { type: 'err' }); } }
+    for (const f of files) { try { sp.e.photos = [...(sp.e.photos || []), await Photos.add(f)]; sp.last = null; } catch { UI.toast('No se pudo leer la imagen', { type: 'err' }); } }
     el.value = ''; refresh();
     if (AI.ready() && files.length) Actions.spAI();
   };
+  Actions.spDoc = async el => {
+    const f = el.files && el.files[0]; el.value = '';
+    if (!f) return;
+    try {
+      const m = await Docs.add(f);
+      sp.e.files = [...(sp.e.files || []), m]; sp.last = m; Docs._pending = sp.e.files;
+      if (m.local) UI.toast('Archivo grande: queda solo en este teléfono', { type: 'err' });
+    } catch (e) { UI.toast(esc(e.message), { type: 'err' }); return; }
+    refresh();
+    if (AI.ready()) Actions.spAI();
+  };
+  Actions.spDelDoc = el => { const [m] = sp.e.files.splice(+el.dataset.k, 1); if (sp.last === m) sp.last = null; Photos.del(m.id); Sync.deletePhoto(m.id); refresh(); };
   // La IA lee la boleta y carga total, datos y productos para repartir
   Actions.spAI = () => {
-    const id = (sp.e.photos || [])[sp.e.photos.length - 1];
+    const id = sp.last || (sp.e.photos || [])[(sp.e.photos || []).length - 1] || (sp.e.files || [])[(sp.e.files || []).length - 1];
     if (!id) return;
     AIView.boleta({ photo: id, dest: 'split', onUse: res => {
       const prev = +sp.e.amount || 0;

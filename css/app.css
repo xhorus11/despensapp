@@ -634,3 +634,22 @@ details.items summary { cursor: pointer; color: var(--tx2); font-weight: 600; ma
 .ai-opt > span:nth-child(2) { flex: 1; }
 .ai-opt small { display: block; color: var(--tx3); font-size: 12.5px; margin-top: 2px; }
 .ai-opt-ico { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; background: var(--grad-ai); color: #fff; flex: none; }
+
+/* ---------- Boletas digitales (PDF / Word) ---------- */
+.doc-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+.doc-card { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--glass); border: 1px solid var(--line2); cursor: pointer; transition: transform .2s var(--spring); }
+.doc-card:active { transform: scale(.98); }
+.doc-card .grow b { display: block; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc-card .grow small { color: var(--tx3); font-size: 12px; }
+.doc-ico { width: 42px; height: 48px; flex: none; border-radius: 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; color: #fff; }
+.doc-ico .ico { width: 18px; height: 18px; }
+.doc-ico b { font-size: 9px; letter-spacing: .04em; }
+.doc-ico.pdf { background: linear-gradient(160deg, #ef4444, #b91c1c); }
+.doc-ico.docx { background: linear-gradient(160deg, #3b82f6, #1d4ed8); }
+.thumb.add.doc { color: #fca5a5; border-color: rgba(248, 113, 113, .45); }
+.doc-view { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.doc-page { width: 100%; height: auto; border-radius: 10px; box-shadow: 0 6px 18px -8px rgba(0, 0, 0, .6); background: #fff; }
+.doc-text { white-space: pre-wrap; background: #fff; color: #1f2937; border-radius: 12px; padding: 14px; font: 13px/1.5 ui-monospace, Consolas, monospace; max-height: 60vh; overflow: auto; margin: 0; }
+
+a.btn { text-decoration: none; color: var(--tx); }
+a.btn.primary { color: #fff; }

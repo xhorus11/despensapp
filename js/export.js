@@ -139,6 +139,36 @@ const Exporter = (() => {
       }
     }
 
+    // Anexo de boletas digitales (PDF como imagen de sus páginas; Word como texto)
+    for (const e of list) for (const m of (e.files || [])) {
+      const blob = await Docs.blobOf(m).catch(() => null);
+      if (!blob) continue;
+      const head = () => {
+        doc.addPage();
+        doc.setFillColor(...PURPLE); doc.rect(0, 0, W, 16, 'F');
+        doc.setTextColor(255); doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+        doc.text(`Anexo · ${clean(e.desc || e.cat)} · ${UI.fmtDate(e.date, { day: '2-digit', month: '2-digit', year: 'numeric' })} · ${money(e.amount)}`, 14, 10.5);
+        doc.setTextColor(120); doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5);
+        doc.text(`Archivo adjunto: ${clean(m.name)}`, 14, 21);
+      };
+      try {
+        if (m.kind === 'pdf') {
+          const img = await Docs.pdfToImage(blob, 3, 1200);
+          const data = await Photos.toDataURL(img), sz = await imgSize(data);
+          if (!sz) continue;
+          head();
+          const maxW = W - 28, maxH = H - 38, sc = Math.min(maxW / sz.w, maxH / sz.h);
+          doc.addImage(data, 'JPEG', (W - sz.w * sc) / 2, 25, sz.w * sc, sz.h * sc);
+        } else {
+          const txt = await Docs.docxText(blob);
+          head();
+          doc.setTextColor(30); doc.setFont('courier', 'normal'); doc.setFontSize(9);
+          const lines = doc.splitTextToSize(txt.slice(0, 6000), W - 28).slice(0, 80);
+          doc.text(lines, 14, 30);
+        }
+      } catch (err) { console.warn('anexo', err); }
+    }
+
     // Numeración
     const n = doc.getNumberOfPages();
     for (let i = 1; i <= n; i++) {

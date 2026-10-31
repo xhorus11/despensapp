@@ -49,6 +49,19 @@ const AI = (() => {
     return { image: m[2], mime: /^image\/(jpeg|png|webp)$/.test(m[1]) ? m[1] : 'image/jpeg' };
   }
 
+  // Cuerpo para leer una boleta: foto (id o Blob), PDF (se convierte a imagen en el teléfono) o Word (se envía su texto)
+  async function attachBody(src) {
+    if (src && typeof src === 'object' && src.kind) {
+      const blob = await Docs.blobOf(src);
+      if (!blob) throw new Error('No se encontró el archivo');
+      if (src.kind === 'pdf') return photoBody(await Docs.pdfToImage(blob, 2));
+      const text = await Docs.docxText(blob);
+      if (!text.trim()) throw new Error('El documento Word no tiene texto para leer');
+      return { text };
+    }
+    return photoBody(src);
+  }
+
   /* ---------- De lo leído al catálogo (cálculo normal) ---------- */
   const norm = s => Catalog.slug(s || '').replace(/-/g, ' ').trim();
   const sing = s => s.replace(/(es|s)$/, '');
@@ -95,5 +108,5 @@ const AI = (() => {
     return out;
   }
 
-  return { ready, configured, on, setOn, why, left, call, photoBody, match, unit, mLabel, ensureCustom, restrictions };
+  return { ready, configured, on, setOn, why, left, call, photoBody, attachBody, match, unit, mLabel, ensureCustom, restrictions };
 })();

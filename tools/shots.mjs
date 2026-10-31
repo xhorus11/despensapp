@@ -42,7 +42,8 @@ await page.emulate({
 });
 // Sin Firebase en las capturas
 await page.setRequestInterception(true);
-page.on('request', r => (/googleapis|gstatic|firebase/.test(r.url()) ? r.abort() : r.continue()));
+// Solo el servidor local (app + IA simulada); se bloquea todo lo externo (Firebase en la nube, CDNs)
+page.on('request', r => (r.url().startsWith('http://localhost') ? r.continue() : r.abort()));
 page.on('pageerror', e => console.error('ERROR en página:', e.message));
 
 const base = `http://localhost:${PORT}/index.html`;
@@ -134,6 +135,11 @@ await shot('ia-lista', go('shop', `Store.state.shop.mode = false; App.render(); 
 await shot('ia-lista-revisa', () => document.querySelector('[data-act="aiListaGo"]').click(), 1500);
 await shot('ia-chef', go('menu', `Actions.aiChef();`));
 await shot('ia-chef-receta', () => document.querySelector('[data-act="chefGo"]').click(), 1500);
+
+// Boletas digitales (PDF / Word)
+const pdfPrep = `const r = await fetch('/tools/fixtures/boleta-lider.pdf'); const pdf = new File([await r.blob()], 'boleta-lider.pdf', { type: 'application/pdf' });`;
+await shot('boleta-digital', go('money', `Actions.moneyNew(); (async () => { ${pdfPrep} await Actions.fxDoc({ files: [pdf], value: '' }); setTimeout(() => { const c = document.querySelector('#sheetBody .sheet-content'); const l = [...c.querySelectorAll('.lbl')].find(x => x.textContent.includes('Boleta')); if (l) c.scrollTop = l.offsetTop - 70; }, 200); })();`), 1300);
+await shot('boleta-pdf-visor', () => document.querySelector('.doc-card').click(), 2500);
 
 await browser.close();
 aiSrv.close();

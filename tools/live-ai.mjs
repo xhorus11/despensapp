@@ -1,5 +1,5 @@
 // despensAPP · Prueba EN VIVO del intermediario de IA (usa cuota real, pocas llamadas).
-// Uso: cd tools && node live-ai.mjs [ruta-foto-boleta.jpg]
+// Uso: cd tools && node live-ai.mjs [boleta.jpg | boleta.pdf | boleta.docx]
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,13 +21,17 @@ const browser = await puppeteer.launch({ executablePath: process.env.CHROME_PATH
 const page = await browser.newPage();
 page.on('pageerror', e => console.log('ERROR página:', e.message));
 await page.goto('http://localhost:8765/index.html', { waitUntil: 'networkidle0' });
-const img = photo ? fs.readFileSync(photo).toString('base64') : null;
+const img = photo ? { b64: fs.readFileSync(photo).toString('base64'), name: path.basename(photo), type: photo.endsWith('.pdf') ? 'application/pdf' : photo.endsWith('.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'image/jpeg' } : null;
 const out = await page.evaluate(async (url, img) => {
   window.DESPENSAPP_AI_URL = url;
   const R = {};
   const run = async (k, fn) => { const t0 = Date.now(); try { const j = await fn(); R[k] = { ok: true, model: j.model, s: ((Date.now() - t0) / 1000).toFixed(1), restantes: j.restantes, check: j.check, data: j.data }; } catch (e) { R[k] = { ok: false, error: e.message }; } };
   await run('lista', () => AI.call('lista', { text: '2 kilos de papas, leche sin lactosa y algo para el asado' }));
-  if (img) await run('boleta', () => AI.call('boleta', { image: img, mime: 'image/jpeg' }));
+  if (img) await run('boleta', async () => {
+    const file = new File([Uint8Array.from(atob(img.b64), c => c.charCodeAt(0))], img.name, { type: img.type });
+    const body = Docs.isDoc(file) ? await AI.attachBody(await Docs.add(file)) : await AI.photoBody(file);
+    return AI.call('boleta', body);
+  });
   await run('receta', () => AI.call('receta', { personas: 3, porVencer: ['Zapallo italiano (1 kg)', 'Huevos (6 un)'], disponibles: ['Arroz', 'Cebolla', 'Queso mantecoso'], restricciones: ['Cami: Celíaco / sin gluten', 'Ana: Hipertensión'] }));
   return R;
 }, AI_URL, img);

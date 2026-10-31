@@ -29,7 +29,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 - **Mi Lista y Modo Súper**: precio real en el pasillo, ofertas (2×1, 3×2, % de descuento), precio por kilo o litro, comparador de formatos y termómetro de presupuesto. Al cerrar la compra, los productos pasan a la despensa y se crea un borrador de gasto.
 - **Menú y recetario**: 95 recetas escalables por número de personas que revisan la despensa y envían a la lista **solo lo que falta**.
 - **Dietas y salud**: alergias, dietas, condiciones de salud (hipertensión, diabetes, colesterol, gota, embarazo, etc.) y alimentos prohibidos por persona. Antes de usar una receta aparece un aviso, y se proponen versiones aptas (porción aparte o todo el plato).
-- **Finanzas**: presupuesto meta, gastos con foto de boleta (lectura del total con OCR opcional), división de gastos entre integrantes, **cuentas separadas por boleta** (por productos, personas externas y aportes de varios pagadores) con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
+- **Finanzas**: presupuesto meta, gastos con foto de boleta o **boleta digital (PDF / Word) con visor integrado** (lectura con IA), división de gastos entre integrantes, **cuentas separadas por boleta** (por productos, personas externas y aportes de varios pagadores) con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
 - **Hogar compartido**: sincronización en tiempo real entre teléfonos con un código o QR, avisos de actividad y bitácora. Varios hogares en el mismo teléfono.
 - **Funciones con IA** (opcionales, siempre con revisión antes de guardar): leer boletas (local, fecha, N°, total, propina y productos con nombres legibles), pasar una boleta a la despensa, inventario desde una foto del refrigerador, lista escrita o dictada y **Chef IA** con lo que está por vencer respetando dietas y salud.
 - **PWA**: instalable, funciona sin conexión y avisa cuando hay una versión nueva.
@@ -43,7 +43,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 | Sincronización | Firebase Firestore + Auth anónima; merge por entidad (last-writer-wins con lápidas) |
 | Offline | Service Worker: network-first para archivos propios, cache-first para estáticos |
 | IA | Cloudflare Worker propio (`worker/`): verifica la sesión de Firebase, limita usos diarios (KV) y llama a Gemini Flash Lite con respaldo en Workers AI (Llama 4 Scout). La clave vive solo en el Worker. |
-| Exportación | jsPDF + autotable, html2canvas, QR (qrcode.js / jsQR) |
+| Exportación y documentos | jsPDF + autotable, html2canvas, pdf.js (visor y lectura de PDF), QR (qrcode.js / jsQR) |
 | Herramientas | Puppeteer: capturas del manual y prueba de humo |
 
 ```
@@ -56,6 +56,7 @@ js/
   export.js    PDF, CSV y PNG
   ui.js        Hojas inferiores, toasts, confirmación en dos toques
   views/       Inicio, Despensa, Lista, Menú, Plata, Hogar, selector de catálogo
+  docs.js      Boletas digitales: PDF (pdf.js) y Word (.docx leído en el teléfono)
   ai.js        Cliente de IA: envío de foto/texto y conversión al catálogo (sin IA)
 worker/        Intermediario de IA (Cloudflare Worker): index.mjs, tasks.mjs, wrangler.toml
 manual/        Manual de uso con capturas

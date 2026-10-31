@@ -65,6 +65,16 @@ t('genérico en minúscula', r.j.data.items[0].generico === 'leche' && r.j.data.
 t('bolsa no va a la despensa', r.j.data.items[1].despensa === false);
 t('informa usos restantes', r.j.restantes === 2);
 
+// Boleta digital en Word: llega como texto, sin imagen
+geminiPlan = [BOLETA_OK];
+const origFetch = globalThis.fetch; let sentParts = null;
+globalThis.fetch = async (url, opt) => { if (String(url).includes('generativelanguage')) sentParts = JSON.parse(opt.body).contents[0].parts; return origFetch(url, opt); };
+r = await call('boleta', { text: 'LIDER\nLECHE DESC 1L 2 x 1.100 2.200\nBOLSA 50\nTOTAL 2.250' }, await token('user4'));
+globalThis.fetch = origFetch;
+t('boleta desde texto (Word)', r.status === 200 && r.j.ok && r.j.check.diff === 0);
+t('Gemini recibe el texto y no una imagen', sentParts && sentParts.length === 1 && sentParts[0].text.includes('boleta digital') && sentParts[0].text.includes('LECHE DESC'));
+t('boleta sin foto ni texto se rechaza', (await call('boleta', {}, await token('user4'))).status === 413);
+
 // Boleta que no cuadra: pide segunda lectura y se queda con la que cuadra
 geminiPlan = [{ ...BOLETA_OK, total: 9999 }, BOLETA_OK];
 r = await call('boleta', { image: 'AAAA' }, tok);
