@@ -1,6 +1,6 @@
 /* DespensAPP · Arranque, navegación y onboarding */
 const App = (() => {
-  const VERSION = '2.1.1';
+  const VERSION = '2.1.2';
   const TABS = {
     home:   { title: 'Inicio',    icon: 'home',   view: () => HomeView },
     pantry: { title: 'Despensa',  icon: 'pantry', view: () => PantryView },
@@ -154,7 +154,7 @@ const App = (() => {
   A.installHelp = () => {
     const ios = isIOS();
     UI.open('Instalar DespensAPP', () => `
-      <div class="center"><img src="img/mascot.png" alt="" class="install-mascot"></div>
+      <div class="center"><img src="img/logo-256.png" alt="DespensAPP" class="install-mascot"></div>
       <p class="sub center">Instálala para abrirla como una app, a pantalla completa y sin conexión.</p>
       ${ios ? `<ol class="steps">
           <li>Abre esta página en <b>Safari</b>.</li>

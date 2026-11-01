@@ -2,7 +2,7 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v2.1.1';
+const VERSION = 'despensapp-v2.1.2';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
   './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/export.js', './js/ai.js',
@@ -12,7 +12,7 @@ const STATIC = [
   './vendor/qrcode.min.js', './vendor/jsQR.js', './vendor/jspdf.umd.min.js', './vendor/jspdf.plugin.autotable.min.js', './vendor/html2canvas.min.js',
   './vendor/firebase-app-compat.js', './vendor/firebase-auth-compat.js', './vendor/firebase-firestore-compat.js',
   './icons/favicon-64.png', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
-  './img/logo.webp', './img/logo.png', './img/mascot.png',
+  './img/logo.webp', './img/logo.png', './img/logo-128.png', './img/logo-256.png',
   './vendor/fonts/plus-jakarta-sans-latin.woff2', './vendor/fonts/plus-jakarta-sans-latin-ext.woff2',
 ];
 
