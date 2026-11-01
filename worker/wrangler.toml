@@ -1,4 +1,4 @@
-# Intermediario de IA de despensAPP (ver index.mjs).
+# Intermediario de IA de DespensAPP (ver index.mjs).
 # Publicar:      cd worker; npx wrangler@4 deploy
 # Clave secreta: npx wrangler@4 secret put GEMINI_API_KEY   (NO va en este archivo ni en GitHub)
 name = "despensapp-ia"

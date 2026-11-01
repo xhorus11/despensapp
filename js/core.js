@@ -1,4 +1,4 @@
-/* despensAPP · Núcleo: unidades, estado, despensa, lista y finanzas */
+/* DespensAPP · Núcleo: unidades, estado, despensa, lista y finanzas */
 
 /* ================= Unidades ================= */
 const Units = {

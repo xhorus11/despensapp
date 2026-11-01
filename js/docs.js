@@ -1,4 +1,4 @@
-/* despensAPP · Boletas digitales (PDF y Word) adjuntas a los gastos.
+/* DespensAPP · Boletas digitales (PDF y Word) adjuntas a los gastos.
    Se guardan tal cual en IndexedDB (mismo almacén que las fotos) y, si el hogar es compartido, se suben a Firestore.
    pdf.js (vendor/) se carga solo al abrir o leer un PDF. Los .docx se leen descomprimiendo el ZIP en el teléfono. */
 const Docs = (() => {

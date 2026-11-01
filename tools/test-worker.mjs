@@ -1,4 +1,4 @@
-// despensAPP · Prueba del intermediario de IA (worker/) sin red ni cuota: simula Firebase, Gemini y Workers AI.
+// DespensAPP · Prueba del intermediario de IA (worker/) sin red ni cuota: simula Firebase, Gemini y Workers AI.
 // Uso: cd tools && node test-worker.mjs
 import worker from '../worker/index.mjs';
 

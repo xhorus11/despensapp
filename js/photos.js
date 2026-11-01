@@ -1,4 +1,4 @@
-/* despensAPP · Fotos de boletas en IndexedDB (comprimidas a 1600 px) */
+/* DespensAPP · Fotos de boletas en IndexedDB (comprimidas a 1600 px) */
 const Photos = (() => {
   const DB = 'despensapp-fotos', STORE = 'fotos';
   let dbp = null;

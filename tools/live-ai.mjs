@@ -1,4 +1,4 @@
-// despensAPP · Prueba EN VIVO del intermediario de IA (usa cuota real, pocas llamadas).
+// DespensAPP · Prueba EN VIVO del intermediario de IA (usa cuota real, pocas llamadas).
 // Uso: cd tools && node live-ai.mjs [boleta.jpg | boleta.pdf | boleta.docx]
 import http from 'node:http';
 import fs from 'node:fs';

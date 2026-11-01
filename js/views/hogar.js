@@ -1,4 +1,4 @@
-/* despensAPP · Hogar: integrantes, dietas, sincronización, bitácora y respaldo */
+/* DespensAPP · Hogar: integrantes, dietas, sincronización, bitácora y respaldo */
 const HogarView = (() => {
   let memEdit = null;
 
@@ -105,13 +105,13 @@ const HogarView = (() => {
         <button class="btn danger ghost block" data-act="resetAll">${ico('trash')} ${Store.homes().length > 1 ? 'Eliminar este hogar de este teléfono' : 'Borrar todos los datos de este teléfono'}</button>
       </section>
       <section class="card about">
-        <picture><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="despensAPP" class="about-logo"></picture>
+        <picture><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="DespensAPP" class="about-logo"></picture>
         <div class="grid2">
           <a class="btn ghost" href="manual/" target="_blank" rel="noopener">${ico('book')} Manual de uso</a>
           <button class="btn ghost" data-act="installApp">${ico('download')} Instalar app</button>
         </div>
       </section>
-      <p class="hint center">despensAPP v${App.VERSION} · local-first · ${navigator.onLine ? 'en línea' : 'sin conexión'}</p>`;
+      <p class="hint center">DespensAPP v${App.VERSION} · local-first · ${navigator.onLine ? 'en línea' : 'sin conexión'}</p>`;
   }
 
   function after() {
@@ -211,7 +211,7 @@ const HogarView = (() => {
     } catch (e) { UI.toast(esc(e.message), { type: 'err' }); }
   }
   Actions.syncJoin = () => doJoin(($('#joinCode') || {}).value);
-  Actions.syncShare = () => UI.share(`Únete a nuestro hogar "${Store.state.household.name}" en despensAPP 🏠\nCódigo: ${Sync.code}\n${Sync.joinLink()}`, 'Invitación despensAPP');
+  Actions.syncShare = () => UI.share(`Únete a nuestro hogar "${Store.state.household.name}" en DespensAPP 🏠\nCódigo: ${Sync.code}\n${Sync.joinLink()}`, 'Invitación DespensAPP');
   Actions.syncCopy = () => UI.copy(Sync.code);
   Actions.syncLeave = el => UI.confirmTap(el, () => { Sync.leave(); App.render(); UI.toast('Saliste del hogar compartido', { icon: 'cloudOff' }); });
 

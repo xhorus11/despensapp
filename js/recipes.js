@@ -1,4 +1,4 @@
-/* despensAPP · Recetario base
+/* DespensAPP · Recetario base
  * "id|Nombre|emoji|Categoría|minutos|porciones|ingredientes|pasos"
  * ingrediente: itemId:cantidad:unidad[:varianteId]  (separados por ;)
  * pasos separados por " / "

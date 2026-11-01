@@ -1,6 +1,6 @@
 {
-  "name": "despensAPP — Despensa, Súper y Gastos del Hogar",
-  "short_name": "despensAPP",
+  "name": "DespensAPP — Despensa, Súper y Gastos del Hogar",
+  "short_name": "DespensAPP",
   "description": "Control de despensa, lista del súper con calculadora en vivo, menú inteligente y finanzas del hogar compartidas.",
   "lang": "es-CL",
   "start_url": "./index.html",

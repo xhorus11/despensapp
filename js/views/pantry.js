@@ -1,4 +1,4 @@
-/* despensAPP · Vista Despensa */
+/* DespensAPP · Vista Despensa */
 const PantryView = (() => {
   const f = { q: '', filter: 'all' };
   let editKey = null;
@@ -199,7 +199,7 @@ const PantryView = (() => {
       lines.push('');
     });
     if (!list.length) lines.push('(nada que listar)');
-    lines.push('— enviado desde despensAPP');
+    lines.push('— enviado desde DespensAPP');
     return lines.join('\n');
   }
   let expKind = 'all';

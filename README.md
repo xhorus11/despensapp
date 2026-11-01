@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="img/logo.png" alt="despensAPP" width="220">
+  <img src="img/logo.png" alt="DespensAPP" width="220">
 </p>
 
-<h1 align="center">despensAPP</h1>
+<h1 align="center">DespensAPP</h1>
 
 <p align="center">
   PWA mobile-first para el hogar: despensa, lista del súper con calculadora en vivo, menú con recetas adaptadas a dietas y salud, y finanzas compartidas en tiempo real.
@@ -20,7 +20,7 @@
 
 ## El problema
 
-En una casa se compra de más, la comida vence en el refrigerador y el presupuesto del supermercado se pasa sin darse cuenta. despensAPP conecta tres cosas que normalmente están separadas: **lo que hay en casa**, **lo que hay que comprar** y **la plata**.
+En una casa se compra de más, la comida vence en el refrigerador y el presupuesto del supermercado se pasa sin darse cuenta. DespensAPP conecta tres cosas que normalmente están separadas: **lo que hay en casa**, **lo que hay que comprar** y **la plata**.
 
 ## Funcionalidades
 

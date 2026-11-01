@@ -1,4 +1,4 @@
-/* despensAPP · Cuentas separadas: dividir una boleta por persona, por productos y por aportes */
+/* DespensAPP · Cuentas separadas: dividir una boleta por persona, por productos y por aportes */
 const SplitView = (() => {
   let sp = null; // { id, isNew, e (copia del gasto), split }
 
@@ -286,7 +286,7 @@ const SplitView = (() => {
     c.rows.forEach(r => lines.push(`${r.name}: consumió ${Money.fmt(r.cons)}, aportó ${Money.fmt(r.paid)} → ${Math.abs(r.net) < 0.5 ? 'a mano' : r.net > 0 ? 'le deben ' + Money.fmt(r.net) : 'debe ' + Money.fmt(-r.net)}`));
     const s = Money.settle(c.rows.map(r => ({ member: r.name, net: r.net })));
     if (s.length) { lines.push(''); s.forEach(x => lines.push(`➡️ ${x.from} le transfiere ${Money.fmt(x.amount)} a ${x.to}`)); }
-    lines.push('', '— despensAPP');
+    lines.push('', '— DespensAPP');
     return lines.join('\n');
   }
   Actions.spShare = () => UI.whatsapp(shareText());

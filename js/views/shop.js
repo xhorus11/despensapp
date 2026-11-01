@@ -1,4 +1,4 @@
-/* despensAPP · Mi Lista + Modo En el Súper (calculadora en vivo, descuentos, comparador) */
+/* DespensAPP · Mi Lista + Modo En el Súper (calculadora en vivo, descuentos, comparador) */
 const ShopView = (() => {
   let editKey = null;
   let pf = null; // formulario de precio

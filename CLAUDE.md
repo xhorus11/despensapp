@@ -1,4 +1,4 @@
-# despensAPP — reglas del proyecto
+# DespensAPP — reglas del proyecto
 
 PWA vanilla (HTML + CSS + JS, sin build). Publicada en https://despensapp.web.app (Firebase Hosting + Firestore).
 
@@ -21,6 +21,7 @@ Hosting tiene dos sitios (ver `firebase.json` / `.firebaserc`): target `app` →
 - Pruebas sin cuota: `cd tools && node test-worker.mjs` (worker con mocks) y `node smoke.mjs` (app con `mock-ai.mjs`).
 
 ## Convenciones
+- El nombre visible de la app es **DespensAPP** (D mayúscula, APP mayúscula). Los identificadores técnicos siguen en minúscula (`despensapp-v1`, `despensapp.web.app`, etc.) y no se deben cambiar.
 - UI con íconos SVG de `js/icons.js`; los emojis son solo contenido (productos, categorías, recetas).
 - Catálogo en `js/catalog.js` (formato `id|Nombre|emoji|unidad[/tamaño]|tags|Variantes`); las variantes se separan con coma, así que no usar comas decimales en nombres (usar `1.6 L`).
 - `firebase-config.js` debe quedar como `window.FIREBASE_CONFIG = {...}` (nunca el snippet con `import`).

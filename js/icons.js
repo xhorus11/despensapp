@@ -1,4 +1,4 @@
-/* despensAPP · Iconos de línea SVG (la UI nunca usa emojis; los emojis son solo contenido) */
+/* DespensAPP · Iconos de línea SVG (la UI nunca usa emojis; los emojis son solo contenido) */
 const ICONS = {
   home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>',
   pantry: '<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16"/><path d="M10 6h4M10 12h4M10 18h4"/>',

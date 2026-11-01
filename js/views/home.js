@@ -1,4 +1,4 @@
-/* despensAPP · Inicio: resumen vivo de los tres pilares */
+/* DespensAPP · Inicio: resumen vivo de los tres pilares */
 const HomeView = (() => {
   function greet() {
     const h = new Date().getHours();
@@ -27,7 +27,7 @@ const HomeView = (() => {
         <p>${UI.fmtDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}</p>
       </section>
 
-      ${App.canInstall() ? `<button class="card install-card" data-act="installApp"><img src="img/mascot.png" alt=""><div class="grow"><b>Instala despensAPP</b><small>Ábrela desde tu pantalla de inicio, a pantalla completa y sin internet.</small></div><span class="btn sm primary">${ico('download')} Instalar</span></button>` : ''}
+      ${App.canInstall() ? `<button class="card install-card" data-act="installApp"><img src="img/mascot.png" alt=""><div class="grow"><b>Instala DespensAPP</b><small>Ábrela desde tu pantalla de inicio, a pantalla completa y sin internet.</small></div><span class="btn sm primary">${ico('download')} Instalar</span></button>` : ''}
 
       <section class="card budget-card ${lvl}" data-act="goTab" data-val="money">
         <div class="row-h"><span class="ring" style="--p:${pct}">${hh.budget ? Math.round(spent / hh.budget * 100) + '%' : ico('wallet')}</span>

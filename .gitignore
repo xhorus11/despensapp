@@ -14,3 +14,6 @@ desktop.ini
 # Caché local de Cloudflare Wrangler
 .wrangler/
 .dev.vars
+
+# Caché del revisor de diseño (impeccable)
+.impeccable/hook.cache.json

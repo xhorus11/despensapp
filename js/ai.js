@@ -1,4 +1,4 @@
-/* despensAPP · Cliente de IA. La IA vive en el intermediario (worker/): aquí solo se envía la foto o el texto,
+/* DespensAPP · Cliente de IA. La IA vive en el intermediario (worker/): aquí solo se envía la foto o el texto,
    se recibe un JSON fijo y la app lo convierte en productos del catálogo con cálculo normal (sin IA). */
 const AI = (() => {
   const PREF = 'despensapp-ai', LEFT = 'despensapp-ai-left';

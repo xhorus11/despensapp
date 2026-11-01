@@ -1,4 +1,4 @@
-/* despensAPP · Planificador de menú + Recetario inteligente */
+/* DespensAPP · Planificador de menú + Recetario inteligente */
 const MenuView = (() => {
   const st = { sub: 'semana', week: 0, q: '', cat: '', onlyOk: false };
   const TYPES = ['Desayuno', 'Almuerzo', 'Once', 'Cena', 'Colación'];

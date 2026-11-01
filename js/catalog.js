@@ -1,4 +1,4 @@
-/* despensAPP · Catálogo maestro
+/* DespensAPP · Catálogo maestro
  * Formato compacto por producto:
  *   "id|Nombre|emoji|unidad[/tamaño]|tags|Variante1,Variante2:+tag-tag,..."
  *   unidad: g | kg | ml | L | un      tamaño: equivalencia de 1 un (ej: kg/150g, un/1L)

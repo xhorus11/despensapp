@@ -1,4 +1,4 @@
-/* despensAPP · Selector de catálogo (compartido por Despensa y Lista) */
+/* DespensAPP · Selector de catálogo (compartido por Despensa y Lista) */
 const Picker = (() => {
   let cfg = null;               // { mode: 'pantry'|'shop', title, onPick }
   let st = { q: '', cat: null };

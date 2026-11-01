@@ -1,4 +1,4 @@
-/* despensAPP · Finanzas: presupuesto, gastos, boletas con foto, cuentas claras y reportes */
+/* DespensAPP · Finanzas: presupuesto, gastos, boletas con foto, cuentas claras y reportes */
 const MoneyView = (() => {
   const st = { period: null, off: 0 };
   let fx = null; // formulario de gasto

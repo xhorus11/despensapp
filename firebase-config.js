@@ -1,6 +1,6 @@
-/* despensAPP · Configuración de Firebase (Hogar compartido)
+/* DespensAPP · Configuración de Firebase (Hogar compartido)
  *
- * Proyecto "despensapp-eb4a7", app web "despensAPP".
+ * Proyecto "despensapp-eb4a7", app web "DespensAPP".
  * Requisitos en la consola: Authentication → "Anónimo" habilitado; Firestore creado con las reglas de firestore.rules.
  * Ojo: este archivo se carga como <script> normal, NO pegues aquí el snippet con "import" de la consola.
  * Si lo dejas en null, la app funciona 100% local/offline sin sincronización.

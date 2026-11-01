@@ -1,4 +1,4 @@
-/* despensAPP · Hogar compartido: motor local-first con merge por entidad + Firebase Firestore */
+/* DespensAPP · Hogar compartido: motor local-first con merge por entidad + Firebase Firestore */
 
 /* ---------- Merge determinista (last-writer-wins por entidad + lápidas) ---------- */
 const Merge = {

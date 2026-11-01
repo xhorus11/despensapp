@@ -1,4 +1,4 @@
-// despensAPP · Genera las capturas del manual (manual/img/*.png)
+// DespensAPP · Genera las capturas del manual (manual/img/*.png)
 // Uso:  cd tools && npm install && npm run shots
 // Requiere Google Chrome instalado (o define CHROME_PATH).
 import http from 'node:http';

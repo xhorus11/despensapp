@@ -1,4 +1,4 @@
-// despensAPP · Intermediario de IA simulado (mismo contrato que worker/index.mjs, respuestas fijas, sin cuota).
+// DespensAPP · Intermediario de IA simulado (mismo contrato que worker/index.mjs, respuestas fijas, sin cuota).
 // Lo usan smoke.mjs y shots.mjs.
 import http from 'node:http';
 

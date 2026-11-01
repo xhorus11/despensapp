@@ -1,8 +1,8 @@
-/* despensAPP · Service Worker
+/* DespensAPP · Service Worker
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v2.1.0';
+const VERSION = 'despensapp-v2.1.1';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
   './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/export.js', './js/ai.js',

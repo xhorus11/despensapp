@@ -1,6 +1,6 @@
-/* despensAPP · Arranque, navegación y onboarding */
+/* DespensAPP · Arranque, navegación y onboarding */
 const App = (() => {
-  const VERSION = '2.1.0';
+  const VERSION = '2.1.1';
   const TABS = {
     home:   { title: 'Inicio',    icon: 'home',   view: () => HomeView },
     pantry: { title: 'Despensa',  icon: 'pantry', view: () => PantryView },
@@ -23,7 +23,7 @@ const App = (() => {
 
   A.render = (opts = {}) => {
     const t = TABS[A.tab];
-    $('#title').textContent = A.tab === 'home' ? 'despensAPP' : t.title;
+    $('#title').textContent = A.tab === 'home' ? 'DespensAPP' : t.title;
     $('#title').classList.toggle('brand', A.tab === 'home');
     const me = Store.me();
     $('#meBtn').innerHTML = me ? `<span class="avatar sm">${esc(me[0])}</span>` : ico('users');
@@ -53,8 +53,8 @@ const App = (() => {
   let ob = null;
   function obSheet() {
     return `<div class="onb">
-      <picture class="onb-logo"><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="despensAPP"></picture>
-      <h2>Bienvenido a despensAPP</h2>
+      <picture class="onb-logo"><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="DespensAPP"></picture>
+      <h2>Bienvenido a DespensAPP</h2>
       <p class="sub">Despensa, lista del súper, menú y gastos del hogar, conectados.</p>
       <label class="lbl">¿Cómo se llama tu hogar?</label>
       <input id="obHome" value="${esc(ob.home)}" placeholder="Ej: Casa Ñuñoa">
@@ -137,7 +137,7 @@ const App = (() => {
   A.canInstall = () => !isStandalone() && (!!deferredPrompt || isIOS() || /android/i.test(navigator.userAgent));
   function updateInstallBtn() { const b = $('#installBtn'); if (b) b.hidden = !A.canInstall(); }
   window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferredPrompt = e; updateInstallBtn(); if (A.ready) A.render(); });
-  window.addEventListener('appinstalled', () => { deferredPrompt = null; updateInstallBtn(); UI.toast('¡despensAPP quedó instalada!', { icon: 'sparkles' }); if (A.ready) A.render(); });
+  window.addEventListener('appinstalled', () => { deferredPrompt = null; updateInstallBtn(); UI.toast('¡DespensAPP quedó instalada!', { icon: 'sparkles' }); if (A.ready) A.render(); });
   Actions.installApp = async () => {
     if (deferredPrompt) {
       try {
@@ -153,7 +153,7 @@ const App = (() => {
   // Instrucciones manuales (iPhone/Safari o navegadores sin aviso nativo)
   A.installHelp = () => {
     const ios = isIOS();
-    UI.open('Instalar despensAPP', () => `
+    UI.open('Instalar DespensAPP', () => `
       <div class="center"><img src="img/mascot.png" alt="" class="install-mascot"></div>
       <p class="sub center">Instálala para abrirla como una app, a pantalla completa y sin conexión.</p>
       ${ios ? `<ol class="steps">
@@ -214,12 +214,12 @@ const App = (() => {
   function oldHostGate() {
     if (!OLD_HOSTS.includes(location.hostname)) return false;
     if (!oldHasData()) { location.replace(NEW_ORIGIN + location.pathname + location.search + location.hash); return true; }
-    try { if (sessionStorage.getItem('despensapp-stay')) { setTimeout(() => UI.toast('despensAPP se mudó a despensapp.web.app', { icon: 'link', action: { label: 'Mudarme', fn: () => Actions.moveGo() }, ms: 9000 }), 800); return false; } } catch {}
+    try { if (sessionStorage.getItem('despensapp-stay')) { setTimeout(() => UI.toast('DespensAPP se mudó a despensapp.web.app', { icon: 'link', action: { label: 'Mudarme', fn: () => Actions.moveGo() }, ms: 9000 }), 800); return false; } } catch {}
     $('#tabbar').hidden = true;
     $('#view').innerHTML = `<section class="move">
-      <picture><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="despensAPP" class="move-logo"></picture>
+      <picture><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="DespensAPP" class="move-logo"></picture>
       <h2>¡Nos cambiamos de dirección!</h2>
-      <p>despensAPP ahora vive en <b>despensapp.web.app</b>. Toca el botón y tus hogares, despensa, lista, menú y gastos se van contigo.</p>
+      <p>DespensAPP ahora vive en <b>despensapp.web.app</b>. Toca el botón y tus hogares, despensa, lista, menú y gastos se van contigo.</p>
       <button class="btn primary block lg" data-act="moveGo">${ico('arrowR')} Ir a despensapp.web.app con mis datos</button>
       <p class="hint">Las fotos de boletas quedan en este navegador; si tu hogar es compartido, se recuperan solas en la nueva dirección. Si instalaste la app, instálala de nuevo desde la nueva dirección.</p>
       <button class="btn ghost block" data-act="moveStay">Seguir aquí por ahora</button>

@@ -1,4 +1,4 @@
-// despensAPP · Prueba de humo de los flujos principales.  Uso: cd tools && node smoke.mjs
+// DespensAPP · Prueba de humo de los flujos principales.  Uso: cd tools && node smoke.mjs
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';

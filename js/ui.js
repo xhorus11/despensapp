@@ -1,4 +1,4 @@
-/* despensAPP · Utilidades de interfaz: sheets, toasts, confirmTap, delegación de eventos */
+/* DespensAPP · Utilidades de interfaz: sheets, toasts, confirmTap, delegación de eventos */
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -181,7 +181,7 @@ const UI = (() => {
     return new Date(t).toLocaleDateString('es-CL', { day: 'numeric', month: 'short' });
   }
 
-  async function share(text, title = 'despensAPP') {
+  async function share(text, title = 'DespensAPP') {
     if (navigator.share) {
       try { await navigator.share({ title, text }); return; } catch (e) { if (e.name === 'AbortError') return; }
     }

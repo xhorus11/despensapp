@@ -1,4 +1,4 @@
-/* despensAPP · Instrucciones y formatos de respuesta de cada tarea de IA.
+/* DespensAPP · Instrucciones y formatos de respuesta de cada tarea de IA.
    Las usa el Worker (index.mjs) y la prueba tools/test-worker.mjs.
    La IA solo LEE o PROPONE; la app revisa, calcula y la persona confirma antes de guardar. */
 

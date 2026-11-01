@@ -1,4 +1,4 @@
-/* despensAPP · Pantallas de IA: leer boleta, inventario por foto, lista por texto/voz y Chef IA.
+/* DespensAPP · Pantallas de IA: leer boleta, inventario por foto, lista por texto/voz y Chef IA.
    Todo lo que propone la IA se muestra para revisar y corregir antes de guardar. */
 const AIView = (() => {
   let run = 0;      // permite descartar respuestas que llegan después de cancelar

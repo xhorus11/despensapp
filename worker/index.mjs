@@ -1,4 +1,4 @@
-/* despensAPP · intermediario de IA (Cloudflare Worker).
+/* DespensAPP · intermediario de IA (Cloudflare Worker).
    Rutas (POST, sesión de Firebase en "Authorization: Bearer <idToken>"):
      /boleta   { image, mime }  → lee una boleta (local, fecha, N°, total, propina, productos)
      /despensa { image, mime }  → inventario sugerido desde una foto del refri o la despensa

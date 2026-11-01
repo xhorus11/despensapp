@@ -1,4 +1,4 @@
-/* despensAPP · Exportadores: Informe PDF, CSV para Excel e imágenes PNG */
+/* DespensAPP · Exportadores: Informe PDF, CSV para Excel e imágenes PNG */
 const Exporter = (() => {
   const PURPLE = [20, 12, 51], ACCENT = [139, 92, 246], PINK = [236, 72, 153];
   const clean = s => String(s ?? '').replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, '').trim();
@@ -27,7 +27,7 @@ const Exporter = (() => {
     doc.setFont('helvetica', 'normal'); doc.setFontSize(11);
     doc.text(`${clean(h.name)}  ·  ${range.label}`, 14, 26);
     doc.setFontSize(8.5); doc.setTextColor(200, 190, 255);
-    doc.text(`Generado el ${new Date().toLocaleString('es-CL')} con despensAPP`, 14, 32);
+    doc.text(`Generado el ${new Date().toLocaleString('es-CL')} con DespensAPP`, 14, 32);
 
     let y = 48;
     doc.setTextColor(30); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
@@ -173,7 +173,7 @@ const Exporter = (() => {
     const n = doc.getNumberOfPages();
     for (let i = 1; i <= n; i++) {
       doc.setPage(i); doc.setFontSize(8); doc.setTextColor(150);
-      doc.text(`${clean(h.name)} · despensAPP · página ${i} de ${n}`, W / 2, H - 6, { align: 'center' });
+      doc.text(`${clean(h.name)} · DespensAPP · página ${i} de ${n}`, W / 2, H - 6, { align: 'center' });
     }
     const name = `informe-gastos-${Catalog.slug(h.name)}-${Catalog.slug(range.label)}.pdf`;
     const blob = doc.output('blob');
@@ -209,7 +209,7 @@ const Exporter = (() => {
   async function textPng(text, name) {
     const box = document.createElement('div');
     box.className = 'png-card';
-    box.innerHTML = `<div class="png-brand">despensAPP</div><pre>${esc(text)}</pre>`;
+    box.innerHTML = `<div class="png-brand">DespensAPP</div><pre>${esc(text)}</pre>`;
     document.body.appendChild(box);
     try { await nodePng(box, name); } finally { box.remove(); }
   }
