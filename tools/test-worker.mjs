@@ -39,7 +39,7 @@ globalThis.fetch = async (url, opt) => {
 const kv = new Map();
 let aiCalls = 0;
 const env = {
-  ALLOWED_ORIGINS: ORIGIN, FIREBASE_PROJECT: PROJECT, LIMIT_PER_USER: '3', LIMIT_TOTAL: '600', GEMINI_API_KEY: 'x',
+  ALLOWED_ORIGINS: ORIGIN, FIREBASE_PROJECT: PROJECT, LIMIT_PER_USER: '3', LIMIT_TOTAL: '600', GEMINI_API_KEY: 'clave-falsa-de-prueba-1234567890',
   LIMITS: { get: async k => kv.get(k) ?? null, put: async (k, v) => { kv.set(k, v); } },
   AI: { run: async () => { aiCalls++; return { response: { items: [{ nombre: 'Papas', generico: 'papa', variante: '', cant: 2, unidad: 'kg' }] } }; } },
 };

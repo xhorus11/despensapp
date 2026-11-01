@@ -220,9 +220,15 @@ export async function callGemini({ key, model, task, b64, mime, text }) {
   parts.push({ text: T.prompt + (text ? '\n\n' + text : '') });
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
   const body = { contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json', responseJsonSchema: T.schema, temperature: task === 'receta' ? 0.7 : 0 } };
-  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body) });
-  const j = await res.json();
-  if (!res.ok) throw Object.assign(new Error((j.error && j.error.message) || 'Error de Gemini'), { status: res.status });
-  const out = (((j.candidates || [])[0] || {}).content || { parts: [] }).parts.map(p => p.text || '').join('');
+  if (!key || String(key).trim().length < 20) throw new Error('GEMINI_API_KEY no configurada o incompleta');
+  const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': String(key).trim() }, body: JSON.stringify(body) });
+  const raw = await res.text();
+  let j = null;
+  try { j = JSON.parse(raw); } catch { j = null; }
+  if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}: ${(j && j.error && j.error.message) || raw.slice(0, 160) || 'sin respuesta'}`), { status: res.status });
+  if (!j) throw new Error('Respuesta de Gemini no es JSON: ' + raw.slice(0, 160));
+  const cand = (j.candidates || [])[0] || {};
+  const out = (cand.content || { parts: [] }).parts.map(p => p.text || '').join('');
+  if (!out) throw new Error('Gemini no devolvió texto' + (cand.finishReason ? ` (${cand.finishReason})` : '') + (j.promptFeedback && j.promptFeedback.blockReason ? ` [${j.promptFeedback.blockReason}]` : ''));
   return JSON.parse(out);
 }
