@@ -20,6 +20,11 @@ Hosting tiene dos sitios (ver `firebase.json` / `.firebaserc`): target `app` →
 - URL del worker en `window.DESPENSAPP_AI_URL` (`firebase-config.js`); vacía = botones de IA ocultos.
 - Pruebas sin cuota: `cd tools && node test-worker.mjs` (worker con mocks) y `node smoke.mjs` (app con `mock-ai.mjs`).
 
+## Cuenta de Google (opcional)
+- `js/account.js`: convierte la sesión anónima en cuenta de Google con `linkWithPopup` (mismo uid; nada se pierde) y respalda cada hogar en `usuarios/{uid}/respaldos/{gid}`. Restaurar (`Store.restoreHomes`) combina, nunca borra.
+- Encendido con `window.DESPENSAPP_GOOGLE` en `firebase-config.js` (requiere proveedor Google habilitado y `despensapp.web.app` en dominios autorizados de Firebase Auth).
+- Prueba sin Google real: `cd tools && node test-account.mjs`.
+
 ## Convenciones
 - El nombre visible de la app es **DespensAPP** (D mayúscula, APP mayúscula). Los identificadores técnicos siguen en minúscula (`despensapp-v1`, `despensapp.web.app`, etc.) y no se deben cambiar.
 - UI con íconos SVG de `js/icons.js`; los emojis son solo contenido (productos, categorías, recetas).

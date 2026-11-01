@@ -196,6 +196,56 @@ const Store = (() => {
       writeReg();
       return inReg.homes.length;
     },
+    /* ---- Respaldo en la cuenta de Google ----
+       Cada hogar tiene un id global (gid) para reconocerlo entre teléfonos: el "h1" de un teléfono no es el "h1" de otro. */
+    homeGid(id) {
+      const r = readRegCached(), h = r.homes.find(x => x.id === id);
+      if (h && !h.gid) { h.gid = uid('g'); writeReg(); }
+      return h ? h.gid : null;
+    },
+    exportHome(id) {
+      if (id === readRegCached().active) { clearTimeout(saveTimer); S.saveNow(); }
+      const h = readRegCached().homes.find(x => x.id === id);
+      if (!h) return null;
+      return { gid: S.homeGid(id), name: h.name, code: h.code || '', data: localStorage.getItem(keyOf(id)) || '', me: localStorage.getItem(meOf(id)) || '' };
+    },
+    // Agrega o combina hogares respaldados. Nunca borra datos: si ya existe, se combina; si es nuevo, se agrega.
+    restoreHomes(list) {
+      const emptyState = raw => { try { const s = JSON.parse(raw || 'null'); return !s || (!(s.household && s.household.members && s.household.members.length) && !Object.keys((s.pantry || {}).items || {}).length && !(s.expenses || []).length); } catch { return true; } };
+      clearTimeout(saveTimer); S.saveNow();
+      const r = readRegCached();
+      const res = { added: 0, merged: 0, skipped: 0 };
+      // Si este teléfono está recién instalado (todo vacío y sin compartir), los hogares respaldados lo reemplazan
+      const fresh = r.homes.every(h => !h.code && emptyState(localStorage.getItem(keyOf(h.id))));
+      const replaced = [];
+      list.forEach(b => {
+        if (!b || !b.gid || !b.data || emptyState(b.data) && !b.code) { res.skipped++; return; }
+        const same = r.homes.find(h => h.gid === b.gid) || (b.code && r.homes.find(h => h.code === b.code));
+        if (same) {
+          const cur = migrate(JSON.parse(localStorage.getItem(keyOf(same.id)) || 'null'));
+          const merged = Merge.state(cur, migrate(JSON.parse(b.data)));
+          localStorage.setItem(keyOf(same.id), JSON.stringify(merged));
+          if (!same.gid) same.gid = b.gid;
+          if (!same.code && b.code) same.code = b.code;
+          res.merged++;
+          return;
+        }
+        const id = uid('h');
+        r.homes.push({ id, gid: b.gid, name: b.name || 'Hogar', code: b.code || '' });
+        localStorage.setItem(keyOf(id), b.data);
+        if (b.me) localStorage.setItem(meOf(id), b.me);
+        replaced.push(id);
+        res.added++;
+      });
+      if (fresh && res.added) {
+        r.homes.filter(h => !replaced.includes(h.id) && !h.code && emptyState(localStorage.getItem(keyOf(h.id))))
+          .forEach(h => { r.homes = r.homes.filter(x => x !== h); try { localStorage.removeItem(keyOf(h.id)); localStorage.removeItem(meOf(h.id)); } catch {} });
+        if (!r.homes.some(h => h.id === r.active)) r.active = r.homes[0].id;
+      }
+      writeReg();
+      S.load();
+      return res;
+    },
     isEmptyHome() { const s = S.state; return !s.household.members.length && !Object.keys(s.pantry.items).length && !s.expenses.length; },
     who() { return S.me() || 'Alguien'; },
     log(k, text) {

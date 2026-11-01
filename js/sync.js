@@ -94,8 +94,15 @@ const Sync = (() => {
       db = firebase.firestore();
       try { await db.enablePersistence({ synchronizeTabs: true }); } catch {}
     }
+    // Espera a que Firebase recupere la sesión guardada (anónima o de Google) antes de crear otra
+    await authReady();
     if (!firebase.auth().currentUser) await firebase.auth().signInAnonymously();
     return db;
+  }
+  let authP = null;
+  function authReady() {
+    if (!authP) authP = new Promise(res => { const un = firebase.auth().onAuthStateChanged(u => { un(); res(u); }); });
+    return authP;
   }
 
   // Token de sesión (anónima) para el intermediario de IA
@@ -231,7 +238,7 @@ const Sync = (() => {
   }
 
   return {
-    init, create, join, leave, idToken, disconnect, switchTo, schedule, push, uploadPhoto, fetchPhoto, deletePhoto, joinLink, configured,
+    init, create, join, leave, idToken, ensureAuth: ensureFirebase, disconnect, switchTo, schedule, push, uploadPhoto, fetchPhoto, deletePhoto, joinLink, configured,
     get code() { return code(); }, get status() { return status; }, label,
   };
 })();

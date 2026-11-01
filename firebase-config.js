@@ -17,3 +17,7 @@ window.FIREBASE_CONFIG = {
 
 /* Intermediario de IA (Cloudflare Worker, carpeta worker/). Vacío = funciones de IA ocultas. */
 window.DESPENSAPP_AI_URL = 'https://despensapp-ia.viajapp.workers.dev';
+
+/* Cuenta de Google (opcional). Activar solo cuando el proveedor Google esté habilitado en Firebase Authentication
+   y despensapp.web.app esté en "Dominios autorizados". false = botones de Google ocultos. */
+window.DESPENSAPP_GOOGLE = false;

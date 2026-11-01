@@ -726,3 +726,9 @@ div.caution:not(.gi) { display: flex; gap: 8px; align-items: flex-start; padding
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* ---------- Cuenta de Google ---------- */
+.btn.google { background: #FFFFFF; color: #1F1F1F; border: 1px solid #DADCE0; font-weight: 700; }
+.btn.google:active:not(:disabled) { background: #F2F2F2; }
+.g-logo { width: 20px; height: 20px; flex: none; }
+.acc-photo { width: 42px; height: 42px; border-radius: 13px; object-fit: cover; flex: none; }

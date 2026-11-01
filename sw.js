@@ -2,10 +2,10 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v2.1.2';
+const VERSION = 'despensapp-v2.1.3';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
-  './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/export.js', './js/ai.js',
+  './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/account.js', './js/export.js', './js/ai.js',
   './js/views/picker.js', './js/views/home.js', './js/views/pantry.js', './js/views/shop.js', './js/views/menu.js', './js/views/money.js', './js/views/split.js', './js/views/ai.js', './js/views/hogar.js', './js/app.js',
 ];
 const STATIC = [
