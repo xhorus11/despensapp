@@ -2,7 +2,7 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v1.4.0';
+const VERSION = 'despensapp-v2.0.0';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
   './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/export.js', './js/ai.js',
@@ -13,6 +13,7 @@ const STATIC = [
   './vendor/firebase-app-compat.js', './vendor/firebase-auth-compat.js', './vendor/firebase-firestore-compat.js',
   './icons/favicon-64.png', './icons/apple-touch-icon.png', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable-512.png',
   './img/logo.webp', './img/logo.png', './img/mascot.png',
+  './vendor/fonts/plus-jakarta-sans-latin.woff2', './vendor/fonts/plus-jakarta-sans-latin-ext.woff2',
 ];
 
 self.addEventListener('install', e => {

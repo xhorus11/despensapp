@@ -1,6 +1,6 @@
 /* despensAPP · Arranque, navegación y onboarding */
 const App = (() => {
-  const VERSION = '1.4.0';
+  const VERSION = '2.0.0';
   const TABS = {
     home:   { title: 'Inicio',    icon: 'home',   view: () => HomeView },
     pantry: { title: 'Despensa',  icon: 'pantry', view: () => PantryView },
@@ -105,6 +105,22 @@ const App = (() => {
       <div class="inline-add"><input id="whoNew" placeholder="Soy alguien nuevo…"><button class="btn primary" data-act="whoNew">${ico('plus')}</button></div>`);
   }
   A.askWho = askWho;
+
+  /* ---------- Apariencia ---------- */
+  A.theme = () => { try { return localStorage.getItem('despensapp-theme') || 'light'; } catch { return 'light'; } };
+  function applyTheme(t) {
+    document.documentElement.dataset.theme = t;
+    const dark = t === 'dark' || (t === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+    const m = document.querySelector('meta[name="theme-color"]');
+    if (m) m.content = dark ? '#0F1012' : '#F5F6F2';
+  }
+  Actions.setTheme = el => {
+    const t = el.dataset.val;
+    try { localStorage.setItem('despensapp-theme', t); } catch {}
+    applyTheme(t); A.render();
+    UI.toast(t === 'dark' ? 'Modo oscuro activado' : t === 'auto' ? 'Apariencia automática' : 'Modo claro activado', { icon: 'eye' });
+  };
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (A.theme() === 'auto') applyTheme('auto'); }); } catch {}
   A.onboarding = onboarding;
   Actions.whoPick = el => { Store.setMe(el.dataset.val); UI.closeAll(); A.render(); UI.toast(`Hola, ${esc(el.dataset.val)}`, { icon: 'user' }); };
   Actions.whoNew = () => {

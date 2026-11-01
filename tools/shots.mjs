@@ -141,6 +141,12 @@ const pdfPrep = `const r = await fetch('/tools/fixtures/boleta-lider.pdf'); cons
 await shot('boleta-digital', go('money', `Actions.moneyNew(); (async () => { ${pdfPrep} await Actions.fxDoc({ files: [pdf], value: '' }); setTimeout(() => { const c = document.querySelector('#sheetBody .sheet-content'); const l = [...c.querySelectorAll('.lbl')].find(x => x.textContent.includes('Boleta')); if (l) c.scrollTop = l.offsetTop - 70; }, 200); })();`), 1300);
 await shot('boleta-pdf-visor', () => document.querySelector('.doc-card').click(), 2500);
 
+// Apariencia: selector y modo oscuro (Libreta)
+await shot('apariencia', go('hogar', `setTimeout(() => { const c = [...document.querySelectorAll('.card-title')].find(x => x.textContent.includes('Apariencia')); if (c) window.scrollTo(0, c.getBoundingClientRect().top + window.scrollY - 90); }, 100);`), 600);
+await shot('modo-oscuro', go('home', `localStorage.setItem('despensapp-theme', 'dark'); document.documentElement.dataset.theme = 'dark'; App.render();`), 600);
+await shot('modo-oscuro-super', go('shop', `Store.state.shop.mode = true; App.render();`), 600);
+await page.evaluate(() => { localStorage.setItem('despensapp-theme', 'light'); document.documentElement.dataset.theme = 'light'; });
+
 await browser.close();
 aiSrv.close();
 server.close();

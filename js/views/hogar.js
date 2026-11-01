@@ -73,6 +73,16 @@ const HogarView = (() => {
 
       ${syncCard()}
 
+      <section class="card">
+        <h4 class="card-title">${ico('eye')} Apariencia</h4>
+        <div class="theme-pick" role="radiogroup" aria-label="Apariencia">
+          ${[['light', 'Claro', ['#F5F6F2', '#FFFFFF', '#1E5B3A']], ['dark', 'Oscuro', ['#0F1012', '#17191C', '#D4F25A']], ['auto', 'Automático', ['#F5F6F2', '#0F1012', '#1E5B3A']]].map(([k, n, c]) => `
+            <button class="theme-opt ${App.theme() === k ? 'on' : ''}" role="radio" aria-checked="${App.theme() === k}" data-act="setTheme" data-val="${k}">
+              <span class="theme-sw" aria-hidden="true">${c.map(x => `<i style="background:${x}"></i>`).join('')}</span>${n}</button>`).join('')}
+        </div>
+        <p class="hint">Automático usa el modo claro u oscuro que tenga tu teléfono.</p>
+      </section>
+
       ${AI.configured() ? `<section class="card">
         <h4 class="card-title">${ico('sparkles')} Inteligencia artificial</h4>
         <label class="ai-switch"><input type="checkbox" ${AI.on() ? 'checked' : ''} data-change="aiToggle"><span><b>Funciones con IA</b><small>Leer boletas, inventario por foto, lista por voz y Chef IA.</small></span></label>

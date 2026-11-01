@@ -202,7 +202,7 @@ const Exporter = (() => {
 
   async function nodePng(node, name) {
     if (!node || !window.html2canvas) { UI.toast('No disponible', { type: 'err' }); return; }
-    const canvas = await html2canvas(node, { backgroundColor: '#140c33', scale: 2, useCORS: true });
+    const canvas = await html2canvas(node, { backgroundColor: getComputedStyle(document.body).backgroundColor, scale: 2, useCORS: true });
     canvas.toBlob(b => shareOrDownload(b, name, 'image/png'), 'image/png');
   }
 

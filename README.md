@@ -32,13 +32,14 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 - **Finanzas**: presupuesto meta, gastos con foto de boleta o **boleta digital (PDF / Word) con visor integrado** (lectura con IA), división de gastos entre integrantes, **cuentas separadas por boleta** (por productos, personas externas y aportes de varios pagadores) con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
 - **Hogar compartido**: sincronización en tiempo real entre teléfonos con un código o QR, avisos de actividad y bitácora. Varios hogares en el mismo teléfono.
 - **Funciones con IA** (opcionales, siempre con revisión antes de guardar): leer boletas (local, fecha, N°, total, propina y productos con nombres legibles), pasar una boleta a la despensa, inventario desde una foto del refrigerador, lista escrita o dictada y **Chef IA** con lo que está por vencer respetando dietas y salud.
+- **Diseño**: tema claro con el verde de la marca y modo oscuro opcional o automático; emojis para reconocer productos de un vistazo.
 - **PWA**: instalable, funciona sin conexión y avisa cuando hay una versión nueva.
 
 ## Stack y arquitectura
 
 | | |
 |---|---|
-| Frontend | HTML, CSS y JavaScript (ES2020) sin frameworks ni build |
+| Frontend | HTML, CSS y JavaScript (ES2020) sin frameworks ni build; sistema de diseño con tokens CSS (tema claro y oscuro) y Plus Jakarta Sans local |
 | Persistencia local | `localStorage` (estado por hogar) + IndexedDB (fotos comprimidas a 1600 px) |
 | Sincronización | Firebase Firestore + Auth anónima; merge por entidad (last-writer-wins con lápidas) |
 | Offline | Service Worker: network-first para archivos propios, cache-first para estáticos |

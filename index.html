@@ -5,7 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>despensAPP</title>
   <meta name="description" content="Despensa, lista del súper, menú y finanzas del hogar, conectados en tiempo real.">
-  <meta name="theme-color" content="#0a0718">
+  <meta name="theme-color" content="#F5F6F2">
+  <script>
+    /* Apariencia: claro (Huerto) por defecto, oscuro (Libreta) o automático según el teléfono */
+    (function () {
+      var t = 'light';
+      try { t = localStorage.getItem('despensapp-theme') || 'light'; } catch (e) {}
+      document.documentElement.dataset.theme = t;
+      var dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+      document.querySelector('meta[name="theme-color"]').content = dark ? '#0F1012' : '#F5F6F2';
+    })();
+  </script>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
