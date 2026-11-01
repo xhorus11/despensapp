@@ -32,6 +32,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 - **Finanzas**: presupuesto meta, gastos con foto de boleta o **boleta digital (PDF / Word) con visor integrado** (lectura con IA), división de gastos entre integrantes, **cuentas separadas por boleta** (por productos, personas externas y aportes de varios pagadores) con sugerencias para quedar a mano, informe PDF con anexo de boletas y CSV para Excel.
 - **Hogar compartido**: sincronización en tiempo real entre teléfonos con un código o QR, avisos de actividad y bitácora. Varios hogares en el mismo teléfono.
 - **Funciones con IA** (opcionales, siempre con revisión antes de guardar): leer boletas (local, fecha, N°, total, propina y productos con nombres legibles), pasar una boleta a la despensa, inventario desde una foto del refrigerador, lista escrita o dictada y **Chef IA** con lo que está por vencer respetando dietas y salud.
+- **Cuenta de Google opcional**: la sesión anónima se vincula a Google (mismo usuario), con respaldo automático por hogar y recuperación que combina sin borrar.
 - **Diseño**: tema claro con el verde de la marca y modo oscuro opcional o automático; emojis para reconocer productos de un vistazo.
 - **PWA**: instalable, funciona sin conexión y avisa cuando hay una versión nueva.
 
@@ -88,6 +89,7 @@ Sin configurar Firebase, la app funciona completa en un solo dispositivo.
 cd tools && npm install
 node smoke.mjs        # prueba de humo de los flujos principales en Chrome (IA simulada)
 node test-worker.mjs  # prueba del intermediario de IA sin red ni cuota
+node test-account.mjs # respaldo/restauración de la cuenta con varios teléfonos simulados
 npm run shots         # regenera las capturas de manual/img
 ```
 

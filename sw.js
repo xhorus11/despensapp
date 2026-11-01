@@ -2,7 +2,7 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v2.1.3';
+const VERSION = 'despensapp-v2.2.0';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
   './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/account.js', './js/export.js', './js/ai.js',

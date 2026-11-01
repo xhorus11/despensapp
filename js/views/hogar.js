@@ -39,12 +39,12 @@ const HogarView = (() => {
       const u = Account.user(), last = Account.lastBackup();
       return `<section class="card">
         <div class="row-h">${u.photoURL ? `<img class="acc-photo" src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : `<span class="avatar">${esc((u.displayName || u.email || '?')[0])}</span>`}
-          <div class="grow"><b>${esc(u.displayName || 'Cuenta de Google')}</b><small class="hint" style="margin:0">${esc(u.email || '')}</small></div>
+          <div class="grow acc-id"><b>${esc(u.displayName || 'Cuenta de Google')}</b><small>${esc(u.email || '')}</small></div>
           <span class="pill ok">${ico('check')} Conectada</span></div>
         <p class="hint">${ico('cloud')} Tus hogares se respaldan solos en tu cuenta de Google. ${last ? 'Último respaldo: ' + UI.ago(last) + '.' : ''}</p>
         <div class="grid2">
           <button class="btn ghost" data-act="accBackup">${ico('upload')} Respaldar ahora</button>
-          <button class="btn ghost" data-act="accSignOut">${ico('logout')} Cerrar sesión</button>
+          <button class="btn ghost" data-act="accSignOut">${ico('logout')} Salir</button>
         </div>
       </section>`;
     }

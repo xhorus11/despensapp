@@ -147,6 +147,10 @@ await shot('modo-oscuro', go('home', `localStorage.setItem('despensapp-theme', '
 await shot('modo-oscuro-super', go('shop', `Store.state.shop.mode = true; App.render();`), 600);
 await page.evaluate(() => { localStorage.setItem('despensapp-theme', 'light'); document.documentElement.dataset.theme = 'light'; });
 
+// Cuenta de Google: tarjeta para conectar y estado conectado (simulado)
+await shot('cuenta-google', go('hogar', `window.scrollTo(0, 0);`), 500);
+await shot('cuenta-conectada', go('hogar', `Account.isGoogle = () => true; Account.user = () => ({ displayName: 'Ana Pérez', email: 'ana.perez@gmail.com', photoURL: '' }); Account.lastBackup = () => Date.now() - 120000; App.render(); window.scrollTo(0, 0);`), 500);
+
 await browser.close();
 aiSrv.close();
 server.close();

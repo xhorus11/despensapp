@@ -732,3 +732,5 @@ div.caution:not(.gi) { display: flex; gap: 8px; align-items: flex-start; padding
 .btn.google:active:not(:disabled) { background: #F2F2F2; }
 .g-logo { width: 20px; height: 20px; flex: none; }
 .acc-photo { width: 42px; height: 42px; border-radius: 13px; object-fit: cover; flex: none; }
+.acc-id b { display: block; font-weight: 800; }
+.acc-id small { display: block; color: var(--tx-3); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
