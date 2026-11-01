@@ -115,6 +115,10 @@ const results = await page.evaluate(async () => {
   $q('#aiText').value = '2 kilos de papas y leche sin lactosa'; $q('#aiText').dispatchEvent(new Event('input', { bubbles: true }));
   click('[data-act="aiListaGo"]');
   check('listaIARevisa', await until(() => title() === 'Revisa tu lista'));
+  click('[data-act="aiListBack"]'); await w(150);
+  check('listaVolverAEditar', title() === 'Lista con IA' && $q('#aiText').value.includes('2 kilos de papas'));
+  click('[data-act="aiListaGo"]');
+  await until(() => title() === 'Revisa tu lista');
   click('[data-act="aiListGo"]'); await w(200);
   check('listaIAAgrega', !!Store.state.shop.sel['fruver|papa|blanca'] && Object.keys(Store.state.shop.sel).some(k => k.startsWith('lacteos|leche|sin-lactosa')));
   // Boleta en un gasto

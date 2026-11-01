@@ -56,7 +56,7 @@ js/
   photos.js    Boletas en IndexedDB
   export.js    PDF, CSV y PNG
   ui.js        Hojas inferiores, toasts, confirmación en dos toques
-  views/       Inicio, Despensa, Lista, Menú, Plata, Hogar, selector de catálogo
+  views/       Inicio, Despensa, Lista, Menú, Gastos, Hogar, selector de catálogo
   docs.js      Boletas digitales: PDF (pdf.js) y Word (.docx leído en el teléfono)
   ai.js        Cliente de IA: envío de foto/texto y conversión al catálogo (sin IA)
 worker/        Intermediario de IA (Cloudflare Worker): index.mjs, tasks.mjs, wrangler.toml

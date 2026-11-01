@@ -108,7 +108,7 @@ const AIView = (() => {
       ${UI.chips(Money.CATS.filter(([c]) => c !== 'Ajuste').map(([c, e]) => [c, `${e} ${c}`]), h.categoria, 'aiCat')}
       <label class="lbl">Detalle</label><input value="${esc(h.detalle)}" placeholder="Ej: Compra semanal (verduras, lácteos)" data-input="aiHead" data-f="detalle">
       <label class="ai-switch"><input type="checkbox" ${rv.pantry ? 'checked' : ''} data-change="aiPantryOn"><span><b>Guardar productos en la despensa</b><small>Agrega a la despensa los productos marcados.</small></span></label>
-      ${rv.dest === 'despensa' ? `<label class="ai-switch"><input type="checkbox" ${rv.expense ? 'checked' : ''} data-change="aiExpenseOn"><span><b>Registrar también el gasto</b><small>Crea el gasto en Plata con la boleta de respaldo.</small></span></label>` : ''}
+      ${rv.dest === 'despensa' ? `<label class="ai-switch"><input type="checkbox" ${rv.expense ? 'checked' : ''} data-change="aiExpenseOn"><span><b>Registrar también el gasto</b><small>Crea también el gasto, con la boleta de respaldo.</small></span></label>` : ''}
       <div class="btn-col">
         <button class="btn primary block lg" data-act="aiUseBoleta">${ico('check')} Usar estos datos</button>
         <button class="btn ghost block" data-act="aiCancel">Volver sin cambios</button>
@@ -162,15 +162,19 @@ const AIView = (() => {
         </div>`).join('') || UI.empty('search', 'No se encontró nada', 'Intenta con otra foto o escribe los productos.')}</div>
       <div class="btn-col">
         <button class="btn primary block lg" data-act="aiListGo">${ico(isList ? 'cart' : 'pantry')} Agregar <b id="aiGoCount">${rv.rows.filter(r => r.on).length}</b> a ${isList ? 'Mi Lista' : 'la despensa'}</button>
+        ${isList ? `<button class="btn ghost block" data-act="aiListBack">${ico('edit')} Corregir el texto y convertir de nuevo</button>` : ''}
         <button class="btn ghost block" data-act="aiCancel">Volver sin cambios</button>
       </div>`;
   }
+  // Vuelve al texto (se conserva) para corregirlo; reconvertir usa 1 uso de IA
+  Actions.aiListBack = () => { run++; UI.replace('Lista con IA', listaSheet); };
   Actions.aiListGo = () => {
     const rows = rv.rows.filter(r => r.on && r.cant > 0);
     if (!rows.length) { UI.toast('No hay productos marcados', { type: 'err' }); return; }
     if (rv.kind === 'lista') {
       rows.forEach(r => { const m = r.m || AI.ensureCustom(r.nombre, AI.unit(r.unidad)); Shop.add(m.c, m.i, m.v, r.cant, AI.unit(r.unidad), '· con IA'); });
       Store.log('shop', `agregó ${rows.length} productos a la lista con IA`);
+      draftText = '';
     } else {
       toPantry(rows);
       Store.log('pantry', `agregó ${rows.length} productos a la despensa desde una foto (IA)`);
@@ -197,24 +201,29 @@ const AIView = (() => {
   let draftText = '';
   function listaSheet() {
     const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    return `<p class="hint">Escribe o dicta lo que necesitas, como se lo dirías a alguien. La IA lo convierte en tu lista.</p>
+    return `<p class="hint">Escribe o dicta lo que necesitas, como se lo dirías a alguien. Si te equivocas, corrígete hablando ("no, mejor 3 kilos") o edita el texto antes de convertir.</p>
       <textarea id="aiText" rows="5" placeholder="Ej: 2 kilos de papas, leche sin lactosa, pan para la once y algo para el asado del sábado" data-input="aiText">${esc(draftText)}</textarea>
-      ${Rec ? `<button class="btn ghost block" data-act="aiMic" id="aiMicBtn">${ico('mic')} Dictar</button>` : ''}
+      ${Rec ? `<button class="btn ghost block" data-act="aiMic" data-target="aiText">${ico('mic')} Dictar</button>` : ''}
       <div class="chips">${['Lo de siempre para el desayuno', 'Algo para el asado', 'Once para 6 personas', 'Útiles de aseo del mes'].map(x => `<button class="chip" data-act="aiExample" data-val="${esc(x)}">${esc(x)}</button>`).join('')}</div>
-      <button class="btn primary block lg" data-act="aiListaGo">${ico('sparkles')} Convertir en lista</button>`;
+      <button class="btn primary block lg" data-act="aiListaGo">${ico('sparkles')} Convertir en lista</button>
+      <p class="hint center">${ico('info')} Dictar y editar no gastan nada; cada “Convertir” usa 1 de tus usos de IA del día${AI.left() != null ? ` (te quedan ${AI.left()})` : ''}.</p>`;
   }
   Actions.aiText = el => { draftText = el.value; };
   Actions.aiExample = el => { draftText = (draftText ? draftText.trim() + ', ' : '') + el.dataset.val.toLowerCase(); UI.refresh(); };
+  // Dictado con el reconocimiento de voz del teléfono (no usa la IA ni gasta usos)
   let rec = null;
   Actions.aiMic = el => {
     const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (rec) { rec.stop(); return; }
-    rec = new Rec(); rec.lang = 'es-CL'; rec.interimResults = false; rec.continuous = true;
-    const base = draftText ? draftText.trim() + ', ' : '';
-    let said = '';
-    rec.onresult = e => { said = [...e.results].map(r => r[0].transcript).join(' '); const t = $('#aiText'); draftText = base + said; if (t) t.value = draftText; };
-    rec.onend = () => { rec = null; const b = $('#aiMicBtn'); if (b) b.innerHTML = `${ico('mic')} Dictar`; };
-    rec.onerror = () => { UI.toast('No se pudo usar el micrófono', { type: 'err' }); };
+    const target = el.dataset.target || 'aiText';
+    const box = () => $('#' + target);
+    const save = v => { if (target === 'chefPedido') chef.pedido = v; else draftText = v; };
+    const start = (box() || {}).value || '';
+    const base = start.trim() ? start.trim() + (target === 'chefPedido' ? ' ' : ', ') : '';
+    rec = new Rec(); rec.lang = 'es-CL'; rec.interimResults = true; rec.continuous = true;
+    rec.onresult = e => { const said = [...e.results].map(r => r[0].transcript).join(' '); const v = base + said; save(v); const t = box(); if (t) t.value = v; };
+    rec.onend = () => { rec = null; const btn = $(`[data-act="aiMic"][data-target="${target}"]`); if (btn) btn.innerHTML = `${ico('mic')} Dictar`; };
+    rec.onerror = ev => { if (ev.error !== 'aborted' && ev.error !== 'no-speech') UI.toast('No se pudo usar el micrófono', { type: 'err' }); };
     rec.start();
     el.innerHTML = `${ico('mic')} Escuchando… toca para terminar`;
   };
@@ -231,7 +240,6 @@ const AIView = (() => {
       if (!alive(my)) return;
       rv = { kind: 'lista', retry: rv.retry, rows: j.data.items.map(it => ({ ...it, m: AI.match(it), on: true })) };
       UI.replace('Revisa tu lista', listSheet);
-      draftText = '';
     } catch (e) { fail(my, e, rv.retry); }
   };
   function openLista() { if (!can()) return; UI.open('Lista con IA', listaSheet); }
@@ -250,6 +258,7 @@ const AIView = (() => {
       ${UI.chips([['', 'Sin apuro'], ['15 minutos', '15 min'], ['30 minutos', '30 min'], ['1 hora', '1 hora']], chef.tiempo, 'chefTiempo')}
       <label class="lbl">¿Qué se te antoja? <small class="hint">(opcional)</small></label>
       <input id="chefPedido" value="${esc(chef.pedido)}" placeholder="Ej: algo calentito, sin horno, para llevar al trabajo…">
+      ${window.SpeechRecognition || window.webkitSpeechRecognition ? `<button class="btn ghost sm block" data-act="aiMic" data-target="chefPedido">${ico('mic')} Dictar</button>` : ''}
       ${restr.length ? `<div class="info">${ico('leaf')} Respetará: ${restr.map(esc).join(' · ')}</div>` : ''}
       <button class="btn primary block lg" data-act="chefGo">${ico('sparkles')} Proponer receta</button>`;
   }
@@ -261,7 +270,7 @@ const AIView = (() => {
   Actions.chefVenc = el => { chef.venc = el.checked; };
   Actions.chefPeople = el => { chef.pedido = ($('#chefPedido') || {}).value || chef.pedido; chef.people = Math.max(1, chef.people + (+el.dataset.d)); UI.refresh(); };
   Actions.chefTiempo = el => { chef.pedido = ($('#chefPedido') || {}).value || chef.pedido; chef.tiempo = el.dataset.val; UI.refresh(); };
-  Actions.chefGo = () => { const p = $('#chefPedido'); if (p) chef.pedido = p.value.trim(); UI.close(); chefCall(); };
+  Actions.chefGo = () => { if (rec) rec.stop(); const p = $('#chefPedido'); if (p) chef.pedido = p.value.trim(); UI.close(); chefCall(); };
   async function chefCall() {
     const all = Pantry.entries().filter(e => !Pantry.isEmpty(e));
     const exp = chef.venc ? Pantry.expiring().filter(e => !Pantry.isEmpty(e)) : [];
@@ -347,7 +356,7 @@ const AIView = (() => {
             method: res.medioPago || 'Débito', docType: res.tipoDoc || 'Boleta', docNum: res.nDoc, photos: photoId ? [photoId] : [], files: docMeta ? [docMeta] : [], notes: 'Leída con IA', items, created: Store.now(), t: Store.now(),
           });
           Store.log('money', `registró una boleta de ${Money.fmt(res.total)} leída con IA`);
-          UI.toast(`Gasto de ${Money.fmt(res.total)} registrado en Plata`, { icon: 'receipt' });
+          UI.toast(`Gasto de ${Money.fmt(res.total)} registrado en Gastos`, { icon: 'receipt' });
         }
         Store.commit();
       },

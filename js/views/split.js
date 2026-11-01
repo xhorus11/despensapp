@@ -35,7 +35,7 @@ const SplitView = (() => {
     sp.split.contrib = me ? [{ who: me, amount: 0 }] : [];
     UI.open('Nueva boleta dividida', render, b => Photos.hydrate(b), { tall: true });
   }
-  // Lista de boletas para elegir (botón "Cuentas separadas" de Plata)
+  // Lista de boletas para elegir (botón "Cuentas separadas" de Gastos)
   function picker() {
     const list = Money.list().filter(e => e.cat !== 'Ajuste').slice(0, 40);
     UI.open('Cuentas separadas', () => `

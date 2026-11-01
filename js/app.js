@@ -1,12 +1,12 @@
 /* despensAPP · Arranque, navegación y onboarding */
 const App = (() => {
-  const VERSION = '2.0.0';
+  const VERSION = '2.1.0';
   const TABS = {
     home:   { title: 'Inicio',    icon: 'home',   view: () => HomeView },
     pantry: { title: 'Despensa',  icon: 'pantry', view: () => PantryView },
     shop:   { title: 'Mi Lista',  icon: 'cart',   view: () => ShopView },
     menu:   { title: 'Menú',      icon: 'menu',   view: () => MenuView },
-    money:  { title: 'Plata',     icon: 'wallet', view: () => MoneyView },
+    money:  { title: 'Gastos',     icon: 'wallet', view: () => MoneyView },
     hogar:  { title: 'Hogar',     icon: 'users',  view: () => HogarView, hidden: true },
   };
   const A = { VERSION, tab: 'home', ready: false };
@@ -55,7 +55,7 @@ const App = (() => {
     return `<div class="onb">
       <picture class="onb-logo"><source srcset="img/logo.webp" type="image/webp"><img src="img/logo.png" alt="despensAPP"></picture>
       <h2>Bienvenido a despensAPP</h2>
-      <p class="sub">Despensa, lista del súper, menú y plata del hogar, conectados.</p>
+      <p class="sub">Despensa, lista del súper, menú y gastos del hogar, conectados.</p>
       <label class="lbl">¿Cómo se llama tu hogar?</label>
       <input id="obHome" value="${esc(ob.home)}" placeholder="Ej: Casa Ñuñoa">
       <label class="lbl">Tu nombre</label>

@@ -84,7 +84,8 @@ Devuelve SOLO el JSON pedido. Reglas:
 ${PRODUCT_RULES}
 - "cant" y "unidad": usa lo que diga la persona ("2 kilos de papas" -> 2 "kg"; "media docena de huevos" -> 6 "un"; "un litro de leche" -> 1 "un" con variante del tamaño si sirve). Si no dice cantidad, usa 1 "un".
 - Si pide algo general (ej. "algo para el asado", "cosas para once"), propone hasta 6 productos típicos chilenos para eso y márcalos con "sugerido": true.
-- Ignora saludos, relleno o texto que no sea un producto. No repitas productos.`;
+- La persona puede corregirse mientras habla o escribe: aplica SIEMPRE su última decisión. Ejemplos: "2 kilos de papas, no, mejor 3" -> 3 kg de papas; "leche… no, olvida la leche" -> sin leche; "arroz, digo, fideos" o "en vez de arroz, fideos" -> fideos y no arroz; "agrega otro pan" -> súmalo al pan ya pedido.
+- Ignora saludos, muletillas ("eh", "este", "o sea", "a ver") y texto que no sea un producto. No repitas productos.`;
 
 export const LISTA_SCHEMA = {
   type: 'object',
@@ -111,7 +112,8 @@ Devuelve SOLO el JSON pedido. Reglas:
 ${PRODUCT_RULES}
 - "categoria": una de ${REC_CATS.join(', ')}. "emoji": un solo emoji de comida. "minutos": tiempo total.
 - "pasos": de 3 a 7 pasos cortos y claros. "usaPorVencer": los nombres de los productos por vencer que usa.
-- "nota": una frase útil (ej. cómo guardar las sobras o una variación).`;
+- "nota": una frase útil (ej. cómo guardar las sobras o una variación).
+- Lo que "se le antoja" puede venir dictado y con correcciones ("algo con pollo, no, mejor sin carne"): respeta siempre la última decisión.`;
 
 export const RECETA_SCHEMA = {
   type: 'object',
