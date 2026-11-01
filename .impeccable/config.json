@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "plus jakarta sans",
+        "createdAt": "2026-11-01T01:20:46.879Z",
+        "reason": "User chose design direction C (Huerto) from the prototypes on 2026-11-01; that direction specifies Plus Jakarta Sans"
+      }
+    ]
+  }
+}
