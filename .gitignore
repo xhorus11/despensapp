@@ -17,3 +17,7 @@ desktop.ini
 
 # Caché del revisor de diseño (impeccable)
 .impeccable/hook.cache.json
+
+# Video manual generado (se regenera con: python tools/video/make_video.py)
+/video/
+tools/video/.work/
