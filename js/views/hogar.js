@@ -160,6 +160,7 @@ const HogarView = (() => {
           <a class="btn ghost" href="manual/" target="_blank" rel="noopener">${ico('book')} Manual de uso</a>
           <button class="btn ghost" data-act="installApp">${ico('download')} Instalar app</button>
         </div>
+        <a class="btn ghost block" href="video" target="_blank" rel="noopener" style="margin-top:10px">${ico('play')} Ver video tutorial (7 min)</a>
       </section>
       <p class="hint center">DespensAPP v${App.VERSION} · local-first · ${navigator.onLine ? 'en línea' : 'sin conexión'}</p>`;
   }

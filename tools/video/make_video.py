@@ -381,6 +381,11 @@ async def main():
                     '-c:a', 'aac', '-b:a', '160k', '-af', f'afade=t=in:st=0:d=0.4,afade=t=out:st={t - 0.9:.2f}:d=0.9',
                     '-c:s', 'mov_text', '-metadata:s:s:0', 'language=spa', '-metadata:s:s:0', 'title=Español',
                     '-metadata', 'title=DespensAPP · Manual de uso', '-movflags', '+faststart', '-shortest', str(out)], check=True)
+    import shutil
+    (ROOT / 'manual' / 'video').mkdir(exist_ok=True)
+    shutil.copy(out, ROOT / 'manual' / 'video' / out.name)
+    subprocess.run([FF, '-y', '-loglevel', 'error', '-ss', '3', '-i', str(out), '-frames:v', '1', '-vf', 'scale=1280:-1',
+                    '-c:v', 'libwebp', '-quality', '80', str(ROOT / 'manual' / 'video' / 'portada.webp')], check=True)
     print(f'Listo: {out} ({out.stat().st_size / 1e6:.1f} MB, {t / 60:.1f} min, {len(items)} subtítulos)')
 
 

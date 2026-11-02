@@ -32,9 +32,25 @@
               "value": "no-cache"
             }
           ]
+        },
+        {
+          "source": "**/*.mp4",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
         }
       ],
-      "target": "app"
+      "target": "app",
+      "redirects": [
+        {
+          "source": "/video",
+          "destination": "/manual/#video",
+          "type": 302
+        }
+      ]
     },
     {
       "public": ".",
@@ -68,10 +84,24 @@
               "value": "no-cache"
             }
           ]
+        },
+        {
+          "source": "**/*.mp4",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=86400"
+            }
+          ]
         }
       ],
       "target": "legacy",
       "redirects": [
+        {
+          "source": "/video",
+          "destination": "https://despensapp.web.app/manual/#video",
+          "type": 301
+        },
         {
           "source": "/manual",
           "destination": "https://despensapp.web.app/manual/",

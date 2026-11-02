@@ -2,7 +2,7 @@
  * - Archivos propios (HTML/CSS/JS): Network-First → siempre la última versión, con respaldo offline.
  * - Recursos estáticos (vendor/, icons/, CDN): Cache-First.
  */
-const VERSION = 'despensapp-v2.2.0';
+const VERSION = 'despensapp-v2.2.1';
 const CORE = [
   './', './index.html', './manifest.webmanifest', './firebase-config.js', './css/app.css',
   './js/icons.js', './js/catalog.js', './js/core.js', './js/recipes.js', './js/ui.js', './js/photos.js', './js/docs.js', './js/sync.js', './js/account.js', './js/export.js', './js/ai.js',
@@ -31,6 +31,8 @@ self.addEventListener('fetch', e => {
   // Firestore / Auth / APIs de Google: siempre red (el SDK maneja su propio offline)
   if (/googleapis\.com|firebaseio\.com|identitytoolkit|securetoken|workers\.dev/.test(url.hostname)) return;
 
+  // Video: el navegador lo pide por partes (Range); va directo a la red y no se guarda en caché
+  if (req.headers.has('range') || /\.mp4$/.test(url.pathname)) return;
   const sameOrigin = url.origin === location.origin;
   const isStatic = sameOrigin ? /\/(vendor|icons|img)\//.test(url.pathname) : /cdn\.jsdelivr\.net|cdnjs\.cloudflare\.com|tessdata|unpkg\.com/.test(url.hostname);
 

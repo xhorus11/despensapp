@@ -59,6 +59,11 @@
       .step.rev .phone { order: 0; }
       .phone { max-width: 290px; margin: 0 auto; }
     }
+    .video-box { text-align: center; padding: 18px 0 6px; }
+    .video-box h2 { font-size: 26px; margin: 0 0 4px; }
+    .video-box p { margin: 0 0 14px; color: #5B6860; }
+    .video-box video { width: 100%; max-width: 960px; aspect-ratio: 16 / 9; border-radius: 18px; background: #14211A; box-shadow: 0 18px 40px -18px rgba(20, 33, 26, .45); display: block; margin: 0 auto; }
+    .video-box .video-link { margin-top: 12px; font-size: 15px; }
   </style>
 </head>
 <body>
@@ -67,15 +72,25 @@
     <h1>Manual de uso</h1>
     <p>Todo lo que necesitas para controlar la despensa, comprar sin salirte del presupuesto, planificar el menú y llevar las cuentas claras del hogar.</p>
     <div class="meta">
-      <span class="tag">Versión 2.2.0</span>
-      <span class="tag">Actualizado: 1 de noviembre de 2026</span>
+      <span class="tag">Versión 2.2.1</span>
+      <span class="tag">Actualizado: 2 de noviembre de 2026</span>
       <span class="tag">39 pantallas</span>
     </div><br>
     <a class="cta" href="../">Abrir DespensAPP →</a>
   </header>
 
+  <section class="wrap video-box" id="video">
+    <h2>Video tutorial</h2>
+    <p>En 7 minutos: todos los módulos y cómo funciona la inteligencia artificial. Con voz y subtítulos.</p>
+    <video controls preload="metadata" playsinline poster="video/portada.webp">
+      <source src="video/DespensAPP-manual-de-uso.mp4" type="video/mp4">
+      Tu navegador no puede reproducir el video. <a href="video/DespensAPP-manual-de-uso.mp4">Descárgalo aquí</a>.
+    </video>
+    <p class="video-link">Comparte este enlace: <a href="https://despensapp.web.app/video">despensapp.web.app/video</a></p>
+  </section>
+
   <nav class="toc"><div class="wrap">
-    <a href="#instalar">Instalar</a><a href="#inicio">Primeros pasos</a><a href="#despensa">Despensa</a><a href="#lista">Lista y Súper</a>
+    <a href="#video">Video</a><a href="#instalar">Instalar</a><a href="#inicio">Primeros pasos</a><a href="#despensa">Despensa</a><a href="#lista">Lista y Súper</a>
     <a href="#menu">Menú y recetas</a><a href="#salud">Dietas y salud</a><a href="#plata">Gastos</a><a href="#digitales">Boletas digitales</a><a href="#separadas">Cuentas separadas</a><a href="#ia">Funciones con IA</a><a href="#cuenta">Cuenta de Google</a><a href="#hogar">Hogares</a><a href="#apariencia">Apariencia</a><a href="#faq">Preguntas</a><a href="#cambios">Novedades</a>
   </div></nav>
 
@@ -598,6 +613,12 @@
     <section class="ch" id="cambios">
       <h2><span class="n">★</span>Novedades</h2>
       <div class="log">
+        <h4>Versión 2.2.1 — 2 de noviembre de 2026</h4>
+        <ul>
+          <li><b>Video tutorial</b> de 7 minutos con voz y subtítulos, al inicio de este manual y en <b>Hogar → Ver video tutorial</b>. Enlace para compartir: despensapp.web.app/video.</li>
+        </ul>
+      </div>
+      <div class="log">
         <h4>Versión 2.2.0 — 1 de noviembre de 2026</h4>
         <ul>
           <li><b>Cuenta de Google opcional</b> con respaldo automático de los hogares y recuperación en un teléfono nuevo. El uso anterior se convierte en la cuenta: no se pierde nada.</li>
@@ -679,6 +700,6 @@
     </section>
   </main>
 
-  <footer class="wrap">DespensAPP · Manual de uso v2.2.0 · <a href="../">Volver a la app</a></footer>
+  <footer class="wrap">DespensAPP · Manual de uso v2.2.1 · <a href="../">Volver a la app</a></footer>
 </body>
 </html>
