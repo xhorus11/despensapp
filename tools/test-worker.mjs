@@ -75,6 +75,27 @@ t('boleta desde texto (Word)', r.status === 200 && r.j.ok && r.j.check.diff === 
 t('Gemini recibe el texto y no una imagen', sentParts && sentParts.length === 1 && sentParts[0].text.includes('boleta digital') && sentParts[0].text.includes('LECHE DESC'));
 t('boleta sin foto ni texto se rechaza', (await call('boleta', {}, await token('user4'))).status === 413);
 
+// Boleta muy larga: llega en varias partes y Gemini las recibe todas, en orden; sin tope bajo de productos
+const LARGA = { ...BOLETA_OK, items: Array.from({ length: 180 }, (_, i) => ({ ...BOLETA_OK.items[0], orig: 'PROD ' + i, cant: 1, pUnit: 100, total: 100 })), total: 18000 };
+geminiPlan = [LARGA];
+globalThis.fetch = async (url, opt) => { if (String(url).includes('generativelanguage')) sentParts = JSON.parse(opt.body); return origFetch(url, opt); };
+r = await call('boleta', { images: [{ image: 'AAAA', mime: 'image/jpeg' }, { image: 'BBBB', mime: 'image/webp' }, { image: 'CCCC' }] }, await token('user5'));
+globalThis.fetch = origFetch;
+const ps = sentParts.contents[0].parts;
+t('boleta en partes: Gemini recibe las 3 imágenes en orden', ps.filter(p => p.inline_data).map(p => p.inline_data.data).join() === 'AAAA,BBBB,CCCC' && ps.some(p => (p.text || '').includes('3 imágenes')));
+t('boleta larga: no se recortan productos (180) y cuadra', r.j.ok && r.j.data.items.length === 180 && r.j.check.diff === 0);
+t('boleta: margen de respuesta amplio', sentParts.generationConfig.maxOutputTokens >= 32768);
+t('demasiadas partes o muy pesadas se rechaza', (await call('boleta', { images: Array(8).fill({ image: 'A'.repeat(2_000_000) }) }, await token('user5'))).status === 413);
+// Respuesta cortada por largo → no se entrega incompleta: pasa al siguiente modelo
+globalThis.fetch = async (url, opt) => {
+  if (String(url).includes('generativelanguage') && geminiPlan[0] === 'CORTADA') { geminiPlan.shift(); return new Response(JSON.stringify({ candidates: [{ finishReason: 'MAX_TOKENS', content: { parts: [{ text: '{"items":[' }] } }] })); }
+  return origFetch(url, opt);
+};
+geminiPlan = ['CORTADA', BOLETA_OK];
+r = await call('boleta', { text: 'boleta larga' }, await token('user6'));
+globalThis.fetch = origFetch;
+t('respuesta cortada pasa al siguiente modelo', r.j.ok && r.j.model === 'gemini-flash-lite-latest' && r.j.intentos.some(x => x.includes('MAX_TOKENS')));
+
 // Boleta que no cuadra: pide segunda lectura y se queda con la que cuadra
 geminiPlan = [{ ...BOLETA_OK, total: 9999 }, BOLETA_OK];
 r = await call('boleta', { image: 'AAAA' }, tok);

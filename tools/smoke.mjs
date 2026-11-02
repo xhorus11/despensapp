@@ -175,6 +175,32 @@ const results = await page.evaluate(async () => {
   const wordMeta = await Docs.add(docxF);
   const body = await AI.attachBody(wordMeta);
   check('wordSeEnviaComoTexto', !!body.text && !body.image && body.text.includes('LECHE DESC'));
+  // Boleta digital muy larga (una sola página de ~1 metro, 120 productos): debe llegar completa
+  const { jsPDF } = window.jspdf;
+  const largo = new jsPDF({ unit: 'pt', format: [296, 3045] });
+  largo.setFont('courier', 'normal'); largo.setFontSize(7);
+  for (let i = 0; i < 120; i++) largo.text(`78000000${String(i).padStart(5, '0')} PRODUCTO ${i} ${(1000 + i * 10).toLocaleString('es-CL')}`, 8, 20 + i * 24.5);
+  largo.text('TOTAL $ 191.400', 8, 3030);
+  const largoMeta = await Docs.add(new File([largo.output('blob')], 'boleta-larga.pdf', { type: 'application/pdf' }));
+  const bLargo = await AI.attachBody(largoMeta);
+  const lineas = (bLargo.text || '').split('\n');
+  check('pdfLargoComoTexto', !bLargo.image && !bLargo.images && lineas.length === 121 && lineas[0].includes('PRODUCTO 0 1.000') && lineas[119].includes('PRODUCTO 119 2.190') && lineas[120].includes('TOTAL'));
+  // PDF escaneado (solo imagen, sin texto) y muy largo → partes legibles, no una tira diminuta
+  const cvL = document.createElement('canvas'); cvL.width = 300; cvL.height = 3000;
+  const cx = cvL.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, 300, 3000); cx.fillStyle = '#000'; cx.font = '14px monospace';
+  for (let i = 0; i < 100; i++) cx.fillText(`PRODUCTO ${i}   ${1000 + i}`, 10, 24 + i * 29);
+  const escaneado = new jsPDF({ unit: 'pt', format: [296, 2960] });
+  escaneado.addImage(cvL.toDataURL('image/jpeg', 0.9), 'JPEG', 0, 0, 296, 2960);
+  const bEsc = await AI.attachBody(await Docs.add(new File([escaneado.output('blob')], 'escaneada.pdf', { type: 'application/pdf' })));
+  const dimsEsc = await Promise.all((bEsc.images || []).map(async p => { const m = await createImageBitmap(new Blob([Uint8Array.from(atob(p.image), c => c.charCodeAt(0))])); return [m.width, m.height]; }));
+  check('pdfEscaneadoEnPartes', dimsEsc.length >= 4 && dimsEsc.length <= 8 && dimsEsc.every(([wd, ht]) => wd >= 900 && ht <= wd * 2.2));
+  // Pantallazo largo de una boleta → también en partes
+  const bShot = await AI.photoBody(await new Promise(r => cvL.toBlob(r, 'image/png')));
+  check('pantallazoLargoEnPartes', (bShot.images || []).length >= 3);
+  // Foto normal → una sola imagen, como siempre
+  const cvN = document.createElement('canvas'); cvN.width = 900; cvN.height = 1200; cvN.getContext('2d').fillRect(0, 0, 5, 5);
+  const bNorm = await AI.photoBody(await new Promise(r => cvN.toBlob(r, 'image/jpeg')));
+  check('fotoNormalUnaImagen', !!bNorm.image && !bNorm.images);
   await Actions.aiBolFile({ files: [docxF], value: '' });
   check('wordDesdeDespensa', await until(() => title() === 'Revisa tu boleta', 6000));
   click('[data-act="aiUseBoleta"]'); await w(300);

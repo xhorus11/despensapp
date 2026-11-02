@@ -77,6 +77,98 @@ const Docs = (() => {
     return new Promise(res => cv.toBlob(b => res(b), 'image/jpeg', 0.85));
   }
 
+  /* ---------- Para la IA: boletas largas sin perder líneas ---------- */
+  // Texto real del PDF (boletas digitales): se arma línea por línea según la posición de cada palabra.
+  // Es exacto y no depende de la resolución, así una boleta de 3 metros llega completa.
+  async function pdfText(blob, maxPages = 12) {
+    const pdf = await pdfDoc(blob);
+    const out = [];
+    for (let n = 1; n <= Math.min(maxPages, pdf.numPages); n++) {
+      const page = await pdf.getPage(n);
+      const tc = await page.getTextContent();
+      const rows = [];
+      tc.items.forEach(it => {
+        if (!it.str || !it.str.trim()) return;
+        const x = it.transform[4], y = it.transform[5], h = Math.abs(it.transform[3]) || it.height || 8;
+        let r = rows.find(r => Math.abs(r.y - y) < h * 0.45);
+        if (!r) rows.push(r = { y, h, parts: [] });
+        r.parts.push({ x, w: it.width || 0, s: it.str });
+      });
+      rows.sort((a, b) => b.y - a.y).forEach(r => {
+        r.parts.sort((a, b) => a.x - b.x);
+        let line = '', end = null;
+        r.parts.forEach(p => {
+          if (end != null && p.x - end > r.h * 0.25 && !/\s$/.test(line) && !/^\s/.test(p.s)) line += ' ';
+          line += p.s; end = p.x + p.w;
+        });
+        out.push(line.replace(/\s+$/, ''));
+      });
+      if (pdf.numPages > 1) out.push('');
+    }
+    return out.join('\n').trim();
+  }
+  // ¿El texto sirve como boleta? (un PDF escaneado no trae texto, o trae basura)
+  const usableText = t => t.replace(/\s/g, '').length >= 40 && (t.match(/\d[\d.,]{2,}/g) || []).length >= 3;
+
+  // Corta una imagen muy alta en partes legibles (máx. ~1.9 veces más altas que anchas), por renglones en blanco
+  function slices(cv, maxParts = 8) {
+    const W = cv.width, maxH = Math.round(W * 1.9);
+    if (cv.height <= maxH * 1.15) return [cv];
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    const blank = y => {
+      const d = ctx.getImageData(0, y, W, 1).data;
+      for (let i = 0; i < d.length; i += 16) if (d[i] < 200 || d[i + 1] < 200 || d[i + 2] < 200) return false;
+      return true;
+    };
+    const parts = [];
+    let y0 = 0;
+    while (y0 < cv.height) {
+      let y1 = Math.min(cv.height, y0 + maxH);
+      if (y1 < cv.height) {           // busca hacia arriba un renglón en blanco para no cortar una línea de texto
+        for (let y = y1; y > y0 + maxH * 0.6; y--) if (blank(y)) { y1 = y; break; }
+      }
+      const c = document.createElement('canvas');
+      c.width = W; c.height = y1 - y0;
+      const x = c.getContext('2d');
+      x.fillStyle = '#fff'; x.fillRect(0, 0, W, c.height);
+      x.drawImage(cv, 0, y0, W, c.height, 0, 0, W, c.height);
+      parts.push(c);
+      y0 = y1;
+    }
+    if (parts.length <= maxParts) return parts;
+    // Demasiado larga: se reduce un poco y se vuelve a cortar (sigue legible)
+    const k = Math.sqrt(maxParts / parts.length) * 0.97, s = document.createElement('canvas');
+    s.width = Math.round(W * k); s.height = Math.round(cv.height * k);
+    s.getContext('2d').drawImage(cv, 0, 0, s.width, s.height);
+    return slices(s, maxParts);
+  }
+  const jpeg = cv => new Promise(res => cv.toBlob(b => res(b), 'image/jpeg', 0.85));
+
+  // PDF escaneado → partes JPEG legibles (sin superar el límite de tamaño de lienzo de los teléfonos)
+  async function pdfSlices(blob, maxPages = 6) {
+    const pdf = await pdfDoc(blob);
+    const out = [];
+    for (let n = 1; n <= Math.min(maxPages, pdf.numPages); n++) {
+      const v1 = (await pdf.getPage(n)).getViewport({ scale: 1 });
+      const width = Math.round(Math.min(1100, Math.sqrt(14e6 * v1.width / v1.height)));   // ≤ 14 MP por página
+      for (const c of slices(await renderPage(pdf, n, width))) out.push(c);
+    }
+    return Promise.all(out.slice(0, 8).map(jpeg));
+  }
+  // Foto o captura muy larga (ej. pantallazo de boleta) → partes legibles; null si no hace falta cortar
+  async function imageSlices(blob) {
+    const img = await createImageBitmap(blob);
+    if (img.height <= img.width * 2.2) { img.close && img.close(); return null; }
+    const width = Math.round(Math.min(img.width, 1100, Math.sqrt(14e6 * img.width / img.height)));
+    const cv = document.createElement('canvas');
+    cv.width = width; cv.height = Math.round(img.height * width / img.width);
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+    ctx.drawImage(img, 0, 0, cv.width, cv.height);
+    img.close && img.close();
+    return Promise.all(slices(cv).map(jpeg));
+  }
+
   /* ---------- Word (.docx): texto desde word/document.xml ---------- */
   async function docxText(blob) {
     const buf = new Uint8Array(await blob.arrayBuffer());
@@ -145,5 +237,5 @@ const Docs = (() => {
   }
   Actions.docView = (el, ev) => { if (ev && ev.target.closest('[data-act]') !== el) return; const m = metaById(el.dataset.id); if (m) view(m); };
 
-  return { ACCEPT, kind, isDoc, add, blobOf, pdfToImage, docxText, cardHtml, view, sizeTxt, _pending: [] };
+  return { ACCEPT, kind, isDoc, add, blobOf, pdfToImage, pdfText, usableText, pdfSlices, imageSlices, docxText, cardHtml, view, sizeTxt, _pending: [] };
 })();

@@ -14,7 +14,7 @@ const PRODUCT_RULES = `- "nombre": nombre claro en español para una persona com
 export const BOLETA_PROMPT = `Eres un lector de boletas y facturas chilenas (supermercados, almacenes, ferias, farmacias, delivery).
 Lee la imagen y devuelve SOLO el JSON pedido. Reglas:
 - Montos en pesos chilenos como números enteros, sin puntos ni signo $ (ej. "$54.884" -> 54884).
-- "items": cada producto o servicio cobrado, en el orden de la boleta. No incluyas líneas de neto, IVA, total, vuelto, medio de pago ni textos del timbre electrónico.
+- "items": TODOS los productos o servicios cobrados, en el orden de la boleta, sin omitir ni resumir ninguno aunque la boleta sea muy larga (puede tener más de 100 líneas). No incluyas líneas de neto, IVA, total, vuelto, medio de pago ni textos del timbre electrónico.
   - "orig": el texto tal como aparece impreso (abreviado o cortado).
 ${PRODUCT_RULES}
   - "cant": cantidad comprada (unidades, o kilos/litros con decimales si se vende a granel, ej. "0,852 x 1 KG" -> 0.852 con unidad "kg").
@@ -29,6 +29,8 @@ ${PRODUCT_RULES}
 - "medioPago": "Efectivo", "Débito", "Crédito" o "Transferencia" si se ve; si no, "".
 - "categoria": una de ${CATS.join(', ')}.
 - "detalle": resumen de 2 a 6 palabras (ej. "Compra semanal (verduras, lácteos)").
+- Si la boleta viene en varias imágenes, son partes consecutivas de la MISMA boleta de arriba hacia abajo: léelas todas en orden como un solo documento.
+- Si hay SUB TOTAL y DESCUENTOS, úsalos para verificar que no falte ninguna línea ni ningún descuento.
 - "legible": false si la foto está tan borrosa o cortada que no se puede leer con confianza; "avisos": problemas concretos (ej. "No se lee el precio de la línea 4").`;
 
 const num = { type: 'number' }, str = { type: 'string' }, bool = { type: 'boolean' };
@@ -148,7 +150,7 @@ const prod = it => ({ nombre: s(it.nombre) || s(it.orig), generico: s(it.generic
 export function normalize(task, d) {
   d = d || {};
   if (task === 'boleta') {
-    const items = (Array.isArray(d.items) ? d.items : []).slice(0, 150).map(it => {
+    const items = (Array.isArray(d.items) ? d.items : []).slice(0, 400).map(it => {
       const cant = n(it.cant) || 1, total = Math.round(n(it.total));
       return { orig: s(it.orig, 160), ...prod(it), cant, unidad: unit(it.unidad, ['un', 'kg', 'g', 'l', 'ml']), pUnit: Math.round(n(it.pUnit)) || Math.round(total / cant), total, despensa: it.despensa !== false && total > 0 };
     });
@@ -197,7 +199,7 @@ export function check(r) {
 
 /* Texto de entrada para las tareas sin imagen */
 export function userText(task, body) {
-  if (task === 'boleta') return `No hay imagen: es una boleta digital. Este es su texto, copiado de un documento:\n"""${s(body.text, 12000)}"""`;
+  if (task === 'boleta') return `No hay imagen: es una boleta digital. Este es su texto, copiado de un documento:\n"""${s(body.text, 60000)}"""`;
   if (task === 'lista') return `Texto de la persona:\n"""${s(body.text, 1500)}"""`;
   if (task === 'receta') {
     const list = (a, max) => (Array.isArray(a) ? a : []).slice(0, max).map(x => s(x, 80)).filter(Boolean);
@@ -215,13 +217,15 @@ export function userText(task, body) {
 }
 
 /* Llamada a Gemini (API REST de Google AI Studio) con salida JSON según el esquema de la tarea */
-export async function callGemini({ key, model, task, b64, mime, text }) {
+export async function callGemini({ key, model, task, b64, mime, text, images }) {
   const T = TASKS[task];
   const parts = [];
-  if (b64) parts.push({ inline_data: { mime_type: mime || 'image/jpeg', data: b64 } });
+  const imgs = images && images.length ? images : b64 ? [{ b64, mime }] : [];
+  imgs.forEach(im => parts.push({ inline_data: { mime_type: im.mime || 'image/jpeg', data: im.b64 } }));
+  if (imgs.length > 1) parts.push({ text: `La boleta viene en ${imgs.length} imágenes: partes consecutivas de arriba hacia abajo.` });
   parts.push({ text: T.prompt + (text ? '\n\n' + text : '') });
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-  const body = { contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json', responseJsonSchema: T.schema, temperature: task === 'receta' ? 0.7 : 0 } };
+  const body = { contents: [{ role: 'user', parts }], generationConfig: { responseMimeType: 'application/json', responseJsonSchema: T.schema, temperature: task === 'receta' ? 0.7 : 0, maxOutputTokens: task === 'boleta' ? 32768 : 8192 } };
   if (!key || String(key).trim().length < 20) throw new Error('GEMINI_API_KEY no configurada o incompleta');
   const res = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': String(key).trim() }, body: JSON.stringify(body) });
   const raw = await res.text();
@@ -231,6 +235,8 @@ export async function callGemini({ key, model, task, b64, mime, text }) {
   if (!j) throw new Error('Respuesta de Gemini no es JSON: ' + raw.slice(0, 160));
   const cand = (j.candidates || [])[0] || {};
   const out = (cand.content || { parts: [] }).parts.map(p => p.text || '').join('');
+  // Respuesta cortada: mejor pasar al siguiente modelo que devolver una boleta incompleta
+  if (cand.finishReason === 'MAX_TOKENS') throw new Error('Respuesta cortada (MAX_TOKENS)');
   if (!out) throw new Error('Gemini no devolvió texto' + (cand.finishReason ? ` (${cand.finishReason})` : '') + (j.promptFeedback && j.promptFeedback.blockReason ? ` [${j.promptFeedback.blockReason}]` : ''));
   return JSON.parse(out);
 }

@@ -21,7 +21,8 @@ const AI = (() => {
     if (!ready()) throw new Error(why());
     if (!navigator.onLine) throw new Error('Necesitas internet para usar la IA');
     const token = await Sync.idToken();
-    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 90000);
+    // Una boleta larga (100+ líneas) puede tomar más: la IA escribe cada producto
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), task === 'boleta' ? 180000 : 90000);
     try {
       const r = await fetch(`${url()}/${task}`, {
         method: 'POST', signal: ctl.signal,
@@ -38,23 +39,39 @@ const AI = (() => {
     } finally { clearTimeout(timer); }
   }
 
-  // Foto → JPEG comprimido en base64 (máx. 1600 px, como las boletas guardadas)
+  async function b64Of(blob) {
+    const m = /^data:([^;]+);base64,(.*)$/.exec(await Photos.toDataURL(blob));
+    return { image: m[2], mime: /^image\/(jpeg|png|webp)$/.test(m[1]) ? m[1] : 'image/jpeg' };
+  }
+  // Varias partes de una misma boleta larga, en orden de arriba hacia abajo
+  async function partsBody(blobs) {
+    if (blobs.length === 1) return b64Of(blobs[0]);
+    return { images: await Promise.all(blobs.map(b64Of)) };
+  }
+
+  // Foto → JPEG comprimido en base64 (máx. 1600 px, como las boletas guardadas).
+  // Si es muy larga (pantallazo de boleta) se envía en partes para que no se achique hasta ser ilegible.
   async function photoBody(blobOrId) {
     let blob = blobOrId;
     if (typeof blobOrId === 'string') blob = await Photos.get(blobOrId) || await Sync.fetchPhoto(blobOrId);
     if (!blob) throw new Error('No se encontró la foto');
+    const parts = await Docs.imageSlices(blob).catch(() => null);
+    if (parts && parts.length > 1) return partsBody(parts);
     if (blob.size > 1.5e6 || !/jpeg/.test(blob.type)) blob = await Photos.compress(blob, 1600, 0.8);
-    const d = await Photos.toDataURL(blob);
-    const m = /^data:([^;]+);base64,(.*)$/.exec(d);
-    return { image: m[2], mime: /^image\/(jpeg|png|webp)$/.test(m[1]) ? m[1] : 'image/jpeg' };
+    return b64Of(blob);
   }
 
-  // Cuerpo para leer una boleta: foto (id o Blob), PDF (se convierte a imagen en el teléfono) o Word (se envía su texto)
+  // Cuerpo para leer una boleta: foto (id o Blob), PDF o Word.
+  // PDF digital → su texto exacto (no se pierde nada por largo que sea); PDF escaneado → imágenes en partes legibles.
   async function attachBody(src) {
     if (src && typeof src === 'object' && src.kind) {
       const blob = await Docs.blobOf(src);
       if (!blob) throw new Error('No se encontró el archivo');
-      if (src.kind === 'pdf') return photoBody(await Docs.pdfToImage(blob, 2));
+      if (src.kind === 'pdf') {
+        const text = await Docs.pdfText(blob).catch(() => '');
+        if (Docs.usableText(text)) return { text };
+        return partsBody(await Docs.pdfSlices(blob));
+      }
       const text = await Docs.docxText(blob);
       if (!text.trim()) throw new Error('El documento Word no tiene texto para leer');
       return { text };

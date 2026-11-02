@@ -1,6 +1,6 @@
 /* DespensAPP · intermediario de IA (Cloudflare Worker).
    Rutas (POST, sesión de Firebase en "Authorization: Bearer <idToken>"):
-     /boleta   { image, mime }  → lee una boleta (local, fecha, N°, total, propina, productos)
+     /boleta   { image, mime } o { images: [{ image, mime }, …] } (boleta larga en partes) o { text } → lee una boleta (local, fecha, N°, total, propina, productos)
      /despensa { image, mime }  → inventario sugerido desde una foto del refri o la despensa
      /lista    { text }         → lista de compras desde texto o voz
      /receta   { personas, porVencer, disponibles, restricciones, pedido, tiempo, evitar } → una receta
@@ -13,6 +13,7 @@ const GEMINI = ['gemini-3.5-flash-lite', 'gemini-flash-lite-latest'];
 // Respaldo en Cloudflare (Llama 4 Scout ve imágenes y respeta el JSON; Mistral como segundo respaldo)
 const CF_MODELS = ['@cf/meta/llama-4-scout-17b-16e-instruct', '@cf/mistralai/mistral-small-3.1-24b-instruct'];
 const MAX_B64 = 7_000_000;   // ~5 MB de imagen
+const MAX_PARTS = 8, MAX_B64_ALL = 12_000_000;   // boleta larga en partes: hasta 8 imágenes, ~9 MB en total
 const LIMIT_MSG = {
   boleta: 'boletas', despensa: 'fotos de despensa', lista: 'listas', receta: 'recetas',
 };
@@ -54,8 +55,14 @@ export default {
     let body;
     try { body = await req.json(); } catch (e) { return out(400, { ok: false, error: 'Solicitud no válida' }); }
     const T = TASKS[task];
-    let b64 = '', mime = 'image/jpeg', text = '';
-    if (task === 'boleta' && !body.image && String(body.text || '').trim()) {
+    let b64 = '', mime = 'image/jpeg', text = '', images = null;
+    const okMime = m => (/^image\/(jpeg|png|webp)$/.test(m) ? m : 'image/jpeg');
+    if (T.image && Array.isArray(body.images) && body.images.length) {
+      images = body.images.slice(0, MAX_PARTS).map(p => ({ b64: String((p && p.image) || '').replace(/^data:[^,]+,/, ''), mime: okMime(p && p.mime) }));
+      const total = images.reduce((a, p) => a + p.b64.length, 0);
+      if (images.some(p => !p.b64 || p.b64.length > MAX_B64) || total > MAX_B64_ALL) return out(413, { ok: false, error: 'La boleta es demasiado grande para enviarla. Intenta con el PDF original.' });
+      if (images.length === 1) { b64 = images[0].b64; mime = images[0].mime; images = null; }
+    } else if (task === 'boleta' && !body.image && String(body.text || '').trim()) {
       text = userText(task, body);   // boleta digital en Word: llega el texto, no una imagen
     } else if (T.image) {
       b64 = String(body.image || '').replace(/^data:[^,]+,/, '');
@@ -76,8 +83,8 @@ export default {
     for (const [kind, model] of order) {
       try {
         const raw = kind === 'g'
-          ? await callGemini({ key: env.GEMINI_API_KEY, model, task, b64, mime, text })
-          : await callWorkersAI(env, model, task, b64, mime, text);
+          ? await callGemini({ key: env.GEMINI_API_KEY, model, task, b64, mime, text, images })
+          : await callWorkersAI(env, model, task, b64, mime, text, images);
         const data = normalize(task, raw);
         if (isEmpty(task, data)) throw new Error('Respuesta vacía');
         if (task !== 'boleta') { best = { model, data }; break; }
@@ -101,15 +108,17 @@ export default {
 };
 
 /* Workers AI (respaldo): mensajes con imagen opcional + salida JSON según el mismo esquema */
-async function callWorkersAI(env, model, task, b64, mime, text) {
+async function callWorkersAI(env, model, task, b64, mime, text, images) {
   const T = TASKS[task];
-  const user = b64
-    ? [{ type: 'image_url', image_url: { url: `data:${mime};base64,${b64}` } }, { type: 'text', text: T.ask || 'Procesa la imagen.' }]
+  const imgs = images && images.length ? images : b64 ? [{ b64, mime }] : [];
+  const user = imgs.length
+    ? imgs.map(im => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.b64}` } }))
+      .concat([{ type: 'text', text: (imgs.length > 1 ? `La boleta viene en ${imgs.length} imágenes consecutivas, de arriba hacia abajo. ` : '') + (T.ask || 'Procesa la imagen.') }])
     : text;
   const r = await env.AI.run(model, {
     messages: [{ role: 'system', content: T.prompt + '\nResponde únicamente con el JSON.' }, { role: 'user', content: user }],
     response_format: { type: 'json_schema', json_schema: T.schema },
-    max_tokens: 4096, temperature: task === 'receta' ? 0.6 : 0,
+    max_tokens: task === 'boleta' ? 16384 : 4096, temperature: task === 'receta' ? 0.6 : 0,
   });
   const res = r && r.response !== undefined ? r.response : r;
   if (res && typeof res === 'object') return res;
