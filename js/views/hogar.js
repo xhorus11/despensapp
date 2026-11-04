@@ -41,11 +41,9 @@ const HogarView = (() => {
         <div class="row-h">${u.photoURL ? `<img class="acc-photo" src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : `<span class="avatar">${esc((u.displayName || u.email || '?')[0])}</span>`}
           <div class="grow acc-id"><b>${esc(u.displayName || 'Cuenta de Google')}</b><small>${esc(u.email || '')}</small></div>
           <span class="pill ok">${ico('check')} Conectada</span></div>
-        <p class="hint">${ico('cloud')} Tus hogares se respaldan solos en tu cuenta de Google. ${last ? 'Último respaldo: ' + UI.ago(last) + '.' : ''}</p>
-        <div class="grid2">
-          <button class="btn ghost" data-act="accBackup">${ico('upload')} Respaldar ahora</button>
-          <button class="btn ghost" data-act="accSignOut">${ico('logout')} Salir</button>
-        </div>
+        <p class="hint">${ico('cloud')} Tus hogares se respaldan solos. Usa la misma cuenta en otro dispositivo y toca Sincronizar para dejarlos iguales. ${last ? 'Último respaldo: ' + UI.ago(last) + '.' : ''}</p>
+        <button class="btn primary block" data-act="accSync">${ico('sync')} Sincronizar ahora</button>
+        <button class="btn ghost block" data-act="accSignOut">${ico('logout')} Salir</button>
       </section>`;
     }
     return `<section class="card">
@@ -69,10 +67,15 @@ const HogarView = (() => {
     } catch (e) { console.warn(e); UI.toast(esc(accErr(e)), { type: 'err', ms: 5000 }); }
     App.render();
   };
-  Actions.accBackup = async el => {
+  Actions.accSync = async el => {
     el.disabled = true;
-    try { const n = await Account.backupAll(); UI.toast(`${n} hogar${n === 1 ? '' : 'es'} respaldado${n === 1 ? '' : 's'} en tu cuenta`, { icon: 'cloud' }); }
-    catch (e) { UI.toast('No se pudo respaldar ahora', { type: 'err' }); }
+    try {
+      const r = await Account.syncNow();
+      UI.toast(`Sincronizado: ${r.homes} hogar${r.homes === 1 ? '' : 'es'}${r.added ? ` · ${r.added} nuevo${r.added > 1 ? 's' : ''} en este dispositivo` : ''}`, { icon: 'sync', ms: 4000 });
+    } catch (e) {
+      console.warn('sincronizar', e);
+      UI.toast(e.code === 'offline' ? 'Necesitas internet para sincronizar' : 'No se pudo sincronizar. Tus datos siguen aquí; intenta de nuevo', { type: 'err', ms: 4500 });
+    }
     App.render();
   };
   Actions.accSignOut = el => UI.confirmTap(el, async () => {

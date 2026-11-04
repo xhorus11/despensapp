@@ -159,6 +159,8 @@ const Store = (() => {
     deleteHome(id) {
       const r = readRegCached();
       if (r.homes.length < 2) return false;
+      const gone = r.homes.find(h => h.id === id);
+      if (gone && gone.gid) S.setDroppedGids([...S.droppedGids(), gone.gid]);   // que Sincronizar no lo traiga de vuelta
       r.homes = r.homes.filter(h => h.id !== id);
       try { localStorage.removeItem(keyOf(id)); localStorage.removeItem(meOf(id)); } catch {}
       if (r.active === id) { r.active = r.homes[0].id; writeReg(); S.load(); S.emit({ home: true }); } else writeReg();
@@ -209,6 +211,14 @@ const Store = (() => {
       if (!h) return null;
       return { gid: S.homeGid(id), name: h.name, code: h.code || '', data: localStorage.getItem(keyOf(id)) || '', me: localStorage.getItem(meOf(id)) || '' };
     },
+    // Hogares que se eliminaron de este teléfono: siguen en la cuenta, pero Sincronizar no los vuelve a traer
+    droppedGids() { try { return JSON.parse(localStorage.getItem('despensapp-fuera') || '[]'); } catch { return []; } },
+    setDroppedGids(list) { try { list.length ? localStorage.setItem('despensapp-fuera', JSON.stringify([...new Set(list)])) : localStorage.removeItem('despensapp-fuera'); } catch {} },
+    // Lo que se sube a la cuenta: este teléfono combinado con lo que ya estaba respaldado (otro teléfono pudo aportar datos)
+    mergeBackup(localRaw, cloudRaw) {
+      if (!cloudRaw) return localRaw;
+      return JSON.stringify(Merge.state(migrate(JSON.parse(localRaw)), migrate(JSON.parse(cloudRaw))));
+    },
     // Agrega o combina hogares respaldados. Nunca borra datos: si ya existe, se combina; si es nuevo, se agrega.
     restoreHomes(list) {
       const emptyState = raw => { try { const s = JSON.parse(raw || 'null'); return !s || (!(s.household && s.household.members && s.household.members.length) && !Object.keys((s.pantry || {}).items || {}).length && !(s.expenses || []).length); } catch { return true; } };
@@ -225,6 +235,7 @@ const Store = (() => {
           const cur = migrate(JSON.parse(localStorage.getItem(keyOf(same.id)) || 'null'));
           const merged = Merge.state(cur, migrate(JSON.parse(b.data)));
           localStorage.setItem(keyOf(same.id), JSON.stringify(merged));
+          if (merged.household && merged.household.name) same.name = merged.household.name;
           if (!same.gid) same.gid = b.gid;
           if (!same.code && b.code) same.code = b.code;
           res.merged++;

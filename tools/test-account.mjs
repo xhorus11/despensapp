@@ -86,6 +86,57 @@ t('Hogar muestra "Continuar con Google" y el aviso de que nada se pierde', ui.bt
 const onb = await (await phone()).evaluate(() => !!document.querySelector('[data-act="obGoogle"]'));
 t('la bienvenida ofrece entrar con Google', onb);
 
+// Sincronizar con la misma cuenta en dos dispositivos (nube simulada, compartida entre los teléfonos)
+const nube = new Map();
+async function conectado() {
+  const p = await phone();
+  await p.exposeFunction('nubePut', (g, d) => { nube.set(g, d); });
+  await p.exposeFunction('nubeGet', g => nube.get(g) || null);
+  await p.exposeFunction('nubeList', () => [...nube].map(([gid, d]) => ({ gid, ...d })));
+  await p.evaluate(() => {
+    const u = { uid: 'u1', isAnonymous: false, displayName: 'Ana', email: '', providerData: [{ providerId: 'google.com' }] };
+    window.firebase = { apps: [1], auth: () => ({ currentUser: u }) };
+    Account.cloud.put = (_, g, d) => nubePut(g, d);
+    Account.cloud.get = (_, g) => nubeGet(g);
+    Account.cloud.list = () => nubeList();
+    Account.cloud.profile = async () => {};
+  });
+  return p;
+}
+const P1 = await conectado(), P2 = await conectado();
+await P1.evaluate(async () => {
+  document.querySelector('#obHome').value = 'Casa Sync'; document.querySelector('#obMe').value = 'Ana';
+  document.querySelector('[data-act="obGo"]').click(); await new Promise(r => setTimeout(r, 200));
+  Pantry.add('lacteos', 'leche', 'entera', 2, 'un'); Store.commit(); Store.saveNow();
+  await Account.syncNow();
+});
+const s2 = await P2.evaluate(async () => { const r = await Account.syncNow(); return { added: r.added, homes: Store.homes().map(h => h.name), leche: !!Pantry.get('lacteos|leche|entera') }; });
+t('sincronizar: el segundo dispositivo recibe el hogar y sus datos', s2.added === 1 && s2.homes.length === 1 && s2.homes[0] === 'Casa Sync' && s2.leche);
+// Ambos cambian sin sincronizar; el respaldo de uno no debe borrar lo del otro
+await P2.evaluate(async () => { Pantry.add('fruver', 'palta', 'hass', 3, 'un'); Store.commit(); Store.saveNow(); await Account.backupHome(Store.activeHome().id); });
+await P1.evaluate(async () => { Pantry.add('fruver', 'tomate', 'cherry', 1, 'kg'); Store.commit(); Store.saveNow(); await Account.backupHome(Store.activeHome().id); });
+const enNube = JSON.parse([...nube.values()][0].data).pantry.items;
+t('respaldo automático combina: la nube conserva lo de ambos', !!enNube['fruver|palta|hass'] && !!enNube['fruver|tomate|cherry']);
+const items = () => ({ palta: !!Pantry.get('fruver|palta|hass'), tomate: !!Pantry.get('fruver|tomate|cherry') });
+await P1.evaluate(() => Account.syncNow()); await P2.evaluate(() => Account.syncNow());
+const [i1, i2] = [await P1.evaluate(items), await P2.evaluate(items)];
+t('tras sincronizar ambos quedan iguales', i1.palta && i1.tomate && i2.palta && i2.tomate);
+// Lo eliminado en un dispositivo se elimina en el otro al sincronizar
+await P1.evaluate(async () => { delete Store.state.pantry.items['fruver|tomate|cherry']; Store.tomb('p:fruver|tomate|cherry'); Store.commit(); Store.saveNow(); await Account.syncNow(); });
+t('un producto borrado no reaparece', await P2.evaluate(async () => { await Account.syncNow(); return !Pantry.get('fruver|tomate|cherry'); }) && await P1.evaluate(() => !Pantry.get('fruver|tomate|cherry')));
+// Hogar eliminado de un teléfono: Sincronizar no lo trae de vuelta, pero sigue en la cuenta
+const del = await P2.evaluate(async () => {
+  await Sync.switchTo(() => Store.createHome('Otro')); Store.state.household.members = ['Ana']; Store.commit(); Store.saveNow();
+  const casa = Store.homes().find(h => h.name === 'Casa Sync').id;
+  await Sync.switchTo(() => Store.deleteHome(casa));
+  await Account.syncNow();
+  return Store.homes().map(h => h.name);
+});
+t('hogar eliminado de este teléfono no vuelve al sincronizar', del.length === 1 && del[0] === 'Otro');
+t('y sigue respaldado en la cuenta', [...nube.values()].some(d => d.name === 'Casa Sync'));
+const boton = await P1.evaluate(async () => { App.go('hogar'); await new Promise(r => setTimeout(r, 100)); const b = document.querySelector('[data-act="accSync"]'); if (!b) return false; b.click(); await new Promise(r => setTimeout(r, 300)); return /Sincronizado/.test(document.body.innerText); });
+t('el botón Sincronizar ahora funciona y avisa', boton);
+
 console.log(errors.length ? 'ERRORES DE PÁGINA: ' + errors.join(' | ') : 'Sin errores de página');
 console.log(`\n${ok} OK, ${bad} fallas`);
 await browser.close(); server.close();

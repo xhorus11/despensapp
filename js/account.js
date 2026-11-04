@@ -1,7 +1,8 @@
 /* DespensAPP · Cuenta de Google (opcional).
    - La sesión anónima se CONVIERTE en cuenta de Google (linkWithPopup): mismo usuario interno, nada se pierde.
    - Los datos siguen en el teléfono; además se respaldan en usuarios/{uid}/respaldos/{gid} (solo el dueño puede leerlos).
-   - En otro teléfono, al entrar con Google se recuperan los hogares (se combinan, nunca se borra nada). */
+   - En otro teléfono, al entrar con Google se recuperan los hogares (se combinan, nunca se borra nada).
+   - Sincronizar: trae lo de la cuenta y sube lo de este teléfono; así varios dispositivos quedan iguales. */
 const Account = (() => {
   const FLAG = 'despensapp-google', LAST = 'despensapp-respaldo-at';
   const MAX = 900000;            // límite práctico de un documento de Firestore
@@ -16,6 +17,7 @@ const Account = (() => {
 
   /* ---------- Nube (aislado para poder probarlo) ---------- */
   const cloud = {
+    async get(uid, gid) { const d = await firebase.firestore().collection('usuarios').doc(uid).collection('respaldos').doc(gid).get(); return d.exists ? d.data() : null; },
     async put(uid, gid, doc) { await firebase.firestore().collection('usuarios').doc(uid).collection('respaldos').doc(gid).set(doc); },
     async list(uid) { const q = await firebase.firestore().collection('usuarios').doc(uid).collection('respaldos').get(); return q.docs.map(d => ({ gid: d.id, ...d.data() })); },
     async profile(uid, doc) { await firebase.firestore().collection('usuarios').doc(uid).set(doc, { merge: true }); },
@@ -26,8 +28,11 @@ const Account = (() => {
     const u = user(); if (!isGoogle()) return false;
     const h = Store.exportHome(id);
     if (!h || !h.data) return false;
-    if (h.data.length > MAX) { console.warn('respaldo muy grande', h.name); return false; }
-    await Account.cloud.put(u.uid, h.gid, { data: h.data, name: h.name, code: h.code, me: h.me, t: Date.now(), dev: Store.dev });
+    // Nunca se pisa lo respaldado: otro dispositivo pudo subir cambios que este aún no tiene
+    const prev = await Account.cloud.get(u.uid, h.gid);
+    const data = Store.mergeBackup(h.data, prev && prev.data);
+    if (data.length > MAX) { console.warn('respaldo muy grande', h.name); return false; }
+    await Account.cloud.put(u.uid, h.gid, { data, name: h.name, code: h.code, me: h.me, t: Date.now(), dev: Store.dev });
     return true;
   }
   async function backupAll() {
@@ -52,14 +57,23 @@ const Account = (() => {
   }
 
   /* ---------- Restaurar ---------- */
-  async function restore() {
+  async function restore(opts = {}) {
     if (!isGoogle()) return { added: 0, merged: 0 };
-    const list = await Account.cloud.list(user().uid);
+    let list = await Account.cloud.list(user().uid);
+    if (opts.skipDropped) { const out = Store.droppedGids(); list = list.filter(b => !out.includes(b.gid)); }
     let res = { added: 0, merged: 0 };
     if (!list.length) return res;
     // Se desconecta la sincronización mientras se combinan los hogares y se reconecta al terminar
     await Sync.switchTo(() => { res = Store.restoreHomes(list); });
     return res;
+  }
+
+  /* ---------- Sincronizar: primero se trae lo de la cuenta, después se sube el resultado ---------- */
+  async function syncNow() {
+    if (!navigator.onLine) throw Object.assign(new Error('offline'), { code: 'offline' });
+    const res = await restore({ skipDropped: true });
+    const n = await backupAll();
+    return { ...res, homes: n };
   }
 
   /* ---------- Entrar / salir ---------- */
@@ -89,6 +103,7 @@ const Account = (() => {
   }
   async function afterSignIn() {
     flag(true);
+    Store.setDroppedGids([]);      // entrar con la cuenta recupera todos sus hogares
     const res = await restore();
     await backupAll();
     const u = user();
@@ -120,5 +135,5 @@ const Account = (() => {
   // Cada cambio local programa un respaldo del hogar activo
   if (typeof Store !== 'undefined') Store.on(opts => { if (!opts || !opts.home) schedule(); });
 
-  return { cloud, enabled, isGoogle, user, lastBackup, backupAll, backupHome, restore, signIn, signOut, handleRedirect, schedule };
+  return { cloud, enabled, isGoogle, user, lastBackup, backupAll, backupHome, restore, syncNow, signIn, signOut, handleRedirect, schedule };
 })();
