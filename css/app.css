@@ -203,6 +203,7 @@ textarea { resize: vertical; min-height: 70px; }
 select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238A958E' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
 select option { background: var(--surface); color: var(--tx); }
 input:focus, select:focus, textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 4px var(--brand-soft); }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; } /* ya marcan el foco con su borde y halo */
 input[type="checkbox"] { width: 20px; height: 20px; min-height: 0; accent-color: var(--brand); }
 input.center { text-align: center; } input.big { font-size: 24px; }
 .lbl { display: block; margin: 18px 0 7px; font-size: 13px; font-weight: 700; color: var(--tx-2); }

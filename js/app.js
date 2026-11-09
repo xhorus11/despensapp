@@ -1,6 +1,6 @@
 /* DespensAPP · Arranque, navegación y onboarding */
 const App = (() => {
-  const VERSION = '2.3.0';
+  const VERSION = '2.4.0';
   const TABS = {
     home:   { title: 'Inicio',    icon: 'home',   view: () => HomeView },
     pantry: { title: 'Despensa',  icon: 'pantry', view: () => PantryView },
@@ -278,6 +278,12 @@ const App = (() => {
       try { await Sync.join(code); UI.toast(`Te uniste al hogar ${esc(code.toUpperCase())}`, { icon: 'cloud' }); if (!Store.me()) askWho(); }
       catch (e) { UI.toast(esc(e.message), { type: 'err' }); }
     }
+    // Tras una actualización, una sola vez: qué hay de nuevo
+    try {
+      const seen = localStorage.getItem('despensapp-version');
+      localStorage.setItem('despensapp-version', VERSION);
+      if (seen && seen !== VERSION) setTimeout(() => UI.toast(`DespensAPP se actualizó a la versión ${VERSION}`, { icon: 'sparkles', ms: 8000, action: { label: 'Novedades', fn: () => window.open('manual/#cambios', '_blank', 'noopener') } }), 2500);
+    } catch {}
     // Recordatorio de vencimientos al abrir
     const exp = Pantry.expiring().filter(e => Pantry.daysTo(e.exp) <= 1);
     if (exp.length) setTimeout(() => UI.toast(`${exp.length} producto${exp.length > 1 ? 's' : ''} vence${exp.length > 1 ? 'n' : ''} pronto`, { icon: 'bell', action: { label: 'Ver', fn: () => A.go('pantry') } }), 1200);

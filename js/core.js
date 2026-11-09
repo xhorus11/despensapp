@@ -219,6 +219,41 @@ const Store = (() => {
       if (!cloudRaw) return localRaw;
       return JSON.stringify(Merge.state(migrate(JSON.parse(localRaw)), migrate(JSON.parse(cloudRaw))));
     },
+    sameBackup(rawA, rawB) {
+      const c = raw => Merge.canon(Merge.shared(migrate(JSON.parse(raw))));
+      return c(rawA) === c(rawB);
+    },
+    // Un hogar que cambió en la cuenta, en vivo: se combina con lo de este dispositivo sin desconectar nada
+    absorbBackup(b) {
+      const r = readRegCached();
+      const same = r.homes.find(h => h.gid === b.gid) || (b.code && r.homes.find(h => h.code === b.code));
+      if (!same) {
+        let hollow = true;
+        try { const s = JSON.parse(b.data); hollow = !b.code && !(s.household && s.household.members && s.household.members.length) && !Object.keys((s.pantry || {}).items || {}).length && !(s.expenses || []).length; } catch {}
+        return hollow ? null : { isNew: true };
+      }
+      const active = same.id === r.active;
+      const cur = active ? S.state : migrate(JSON.parse(localStorage.getItem(keyOf(same.id)) || 'null'));
+      const inc = migrate(JSON.parse(b.data));
+      const merged = Merge.state(cur, inc);
+      const c = x => Merge.canon(Merge.shared(x));
+      const after = c(merged), changed = after !== c(cur), upload = after !== c(inc);
+      const known = new Set(cur.log.map(l => l.id));
+      const fresh = merged.log.filter(l => !known.has(l.id) && l.dev !== S.dev).slice(0, 3);
+      let touched = false;
+      if (!same.gid) { same.gid = b.gid; touched = true; }
+      const newCode = !same.code && !!b.code;
+      if (newCode) { same.code = b.code; touched = true; }
+      if (touched) writeReg();
+      if (changed) {
+        if (active) { clearTimeout(saveTimer); S.replace(merged, { remote: true, account: true }); }
+        else {
+          localStorage.setItem(keyOf(same.id), JSON.stringify(merged));
+          if (merged.household && merged.household.name && same.name !== merged.household.name) { same.name = merged.household.name; writeReg(); }
+        }
+      }
+      return { id: same.id, active, changed, upload, fresh: active ? fresh : [], reconnect: active && newCode };
+    },
     // Agrega o combina hogares respaldados. Nunca borra datos: si ya existe, se combina; si es nuevo, se agrega.
     restoreHomes(list) {
       const emptyState = raw => { try { const s = JSON.parse(raw || 'null'); return !s || (!(s.household && s.household.members && s.household.members.length) && !Object.keys((s.pantry || {}).items || {}).length && !(s.expenses || []).length); } catch { return true; } };

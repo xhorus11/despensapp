@@ -25,7 +25,7 @@ En una casa se compra de más, la comida vence en el refrigerador y el presupues
 ## Funcionalidades
 
 - **Despensa**: cantidades en varias unidades (g, kg, ml, L, un), semáforo de vencimiento, stock mínimo con sugerencias de reposición y exportación por WhatsApp o imagen.
-- **Catálogo chileno**: 20 categorías y más de 330 productos con variantes, basado en las categorías de supermercados chilenos. Permite crear productos y variantes propios.
+- **Catálogo chileno**: 20 categorías, más de 360 productos y cerca de 1.500 variantes, basado en las categorías de supermercados chilenos. Permite crear productos y variantes propios.
 - **Mi Lista y Modo Súper**: precio real en el pasillo, ofertas (2×1, 3×2, % de descuento), precio por kilo o litro, comparador de formatos y termómetro de presupuesto. Al cerrar la compra, los productos pasan a la despensa y se crea un borrador de gasto.
 - **Menú y recetario**: 95 recetas escalables por número de personas que revisan la despensa y envían a la lista **solo lo que falta**.
 - **Dietas y salud**: alergias, dietas, condiciones de salud (hipertensión, diabetes, colesterol, gota, embarazo, etc.) y alimentos prohibidos por persona. Antes de usar una receta aparece un aviso, y se proponen versiones aptas (porción aparte o todo el plato).

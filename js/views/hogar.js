@@ -41,7 +41,7 @@ const HogarView = (() => {
         <div class="row-h">${u.photoURL ? `<img class="acc-photo" src="${esc(u.photoURL)}" alt="" referrerpolicy="no-referrer">` : `<span class="avatar">${esc((u.displayName || u.email || '?')[0])}</span>`}
           <div class="grow acc-id"><b>${esc(u.displayName || 'Cuenta de Google')}</b><small>${esc(u.email || '')}</small></div>
           <span class="pill ok">${ico('check')} Conectada</span></div>
-        <p class="hint">${ico('cloud')} Tus hogares se respaldan solos. Usa la misma cuenta en otro dispositivo y toca Sincronizar para dejarlos iguales. ${last ? 'Último respaldo: ' + UI.ago(last) + '.' : ''}</p>
+        <p class="hint">${ico('cloud')} Tus dispositivos con esta cuenta se mantienen iguales solos: cada cambio llega en segundos. ${last ? 'Último respaldo: ' + UI.ago(last) + '.' : ''}</p>
         <button class="btn primary block" data-act="accSync">${ico('sync')} Sincronizar ahora</button>
         <button class="btn ghost block" data-act="accSignOut">${ico('logout')} Salir</button>
       </section>`;
@@ -164,6 +164,7 @@ const HogarView = (() => {
           <button class="btn ghost" data-act="installApp">${ico('download')} Instalar app</button>
         </div>
         <a class="btn ghost block" href="video" target="_blank" rel="noopener" style="margin-top:10px">${ico('play')} Ver video tutorial (7 min)</a>
+        <a class="btn ghost block" href="manual/#cambios" target="_blank" rel="noopener" style="margin-top:10px">${ico('sparkles')} Novedades de la versión ${App.VERSION}</a>
       </section>
       <p class="hint center">DespensAPP v${App.VERSION} · local-first · ${navigator.onLine ? 'en línea' : 'sin conexión'}</p>`;
   }

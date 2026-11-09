@@ -82,7 +82,18 @@ const AI = (() => {
   /* ---------- De lo leído al catálogo (cálculo normal) ---------- */
   const norm = s => Catalog.slug(s || '').replace(/-/g, ' ').trim();
   const sing = s => s.replace(/(es|s)$/, '');
+  function pickVariant(c, id, it) {
+    const vars = Catalog.variants(c, id);
+    const hay = norm(`${it.variante || ''} ${it.nombre || ''}`);
+    const v = vars.find(x => it.variante && norm(x.name) === norm(it.variante))
+      || vars.slice().sort((a, b) => b.name.length - a.name.length).find(x => hay.includes(norm(x.name)))
+      || vars[0];
+    return { c, i: id, v: v ? v.id : '' };
+  }
   function match(it) {
+    // Primero lo que el producto ES ("fideos instantáneos Maruchan" es una sopa, no fideos)
+    const h = Catalog.hint(`${it.generico || ''} ${it.nombre || ''} ${it.variante || ''} ${it.orig || ''}`);
+    if (h) return h.v ? { c: h.c, i: h.i, v: h.v } : pickVariant(h.c, h.i, it);
     const tries = [it.generico, it.nombre, (it.generico || '').split(' ')[0]].filter(Boolean);
     for (const q of tries) {
       const res = Catalog.search(q);
@@ -92,12 +103,7 @@ const AI = (() => {
         || res.find(r => norm(r.item.name).startsWith(nq) || nq.startsWith(sing(norm(r.item.name))))
         || (q === it.nombre ? null : res[0]);
       if (!best) continue;
-      const vars = Catalog.variants(best.c, best.item.id);
-      const hay = norm(`${it.variante || ''} ${it.nombre || ''}`);
-      const v = vars.find(x => it.variante && norm(x.name) === norm(it.variante))
-        || vars.slice().sort((a, b) => b.name.length - a.name.length).find(x => hay.includes(norm(x.name)))
-        || vars[0];
-      return { c: best.c, i: best.item.id, v: v ? v.id : '' };
+      return pickVariant(best.c, best.item.id, it);
     }
     return null;
   }

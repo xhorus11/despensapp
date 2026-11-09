@@ -137,6 +137,80 @@ t('y sigue respaldado en la cuenta', [...nube.values()].some(d => d.name === 'Ca
 const boton = await P1.evaluate(async () => { App.go('hogar'); await new Promise(r => setTimeout(r, 100)); const b = document.querySelector('[data-act="accSync"]'); if (!b) return false; b.click(); await new Promise(r => setTimeout(r, 300)); return /Sincronizado/.test(document.body.innerText); });
 t('el botón Sincronizar ahora funciona y avisa', boton);
 
+// En vivo: lo que cambia en un dispositivo llega al otro sin tocar nada, y al abrirse se pone al día
+const nubeV = new Map(); let escrituras = 0; const vivos = [];
+async function enVivo() {
+  const p = await phone();
+  const yo = vivos.length;
+  await p.exposeFunction('vPut', async (g, d) => {
+    nubeV.set(g, d); escrituras++;
+    for (let i = 0; i < vivos.length; i++) if (i !== yo) await vivos[i].evaluate(l => { if (window.__cb) window.__cb(l, false); }, [{ gid: g, ...d }]).catch(() => {});
+  });
+  await p.exposeFunction('vGet', g => nubeV.get(g) || null);
+  await p.exposeFunction('vList', () => [...nubeV].map(([gid, d]) => ({ gid, ...d })));
+  await p.evaluate(() => {
+    const u = { uid: 'u2', isAnonymous: false, displayName: 'Ana', email: '', providerData: [{ providerId: 'google.com' }] };
+    window.firebase = { apps: [1], auth: () => ({ currentUser: u }) };
+    Account.cloud.put = (_, g, d) => vPut(g, d);
+    Account.cloud.get = (_, g) => vGet(g);
+    Account.cloud.list = () => vList();
+    Account.cloud.profile = async () => {};
+    Account.cloud.watch = (_, cb) => { window.__cb = cb; vList().then(l => cb(l, false)); return () => { window.__cb = null; }; };
+  });
+  vivos.push(p);
+  return p;
+}
+const espera = ms => new Promise(r => setTimeout(r, ms));
+const hasta = async (fn, ms = 6000) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { if (await fn()) return true; await espera(120); } return false; };
+const D1 = await enVivo();
+await D1.evaluate(async () => {
+  document.querySelector('#obHome').value = 'Casa Vivo'; document.querySelector('#obMe').value = 'Ana';
+  document.querySelector('[data-act="obGo"]').click(); await new Promise(r => setTimeout(r, 200));
+  Pantry.add('lacteos', 'leche', 'entera', 2, 'un'); Store.commit(); Store.saveNow();
+  Account.goLive();
+});
+await hasta(() => nubeV.size === 1);
+const D2 = await enVivo();
+await D2.evaluate(() => Account.goLive());
+t('al abrirse trae el hogar de la cuenta', await hasta(() => D2.evaluate(() => Store.homes().some(h => h.name === 'Casa Vivo') && Store.activeHome().name === 'Casa Vivo' && !!Pantry.get('lacteos|leche|entera'))));
+await D2.evaluate(() => { Store.log('despensa', 'agregó palta'); Pantry.add('fruver', 'palta', 'hass', 3, 'un'); Store.commit(); });
+t('un cambio llega solo al otro dispositivo', await hasta(() => D1.evaluate(() => !!Pantry.get('fruver|palta|hass')), 5000));
+t('la pantalla del otro dispositivo se actualiza sola', await D1.evaluate(async () => { App.go('pantry'); await new Promise(r => setTimeout(r, 100)); return /Palta/.test(document.querySelector('#view').innerText); }));
+await D1.evaluate(() => { delete Store.state.pantry.items['fruver|palta|hass']; Store.tomb('p:fruver|palta|hass'); Store.commit(); });
+t('un borrado llega solo al otro dispositivo', await hasta(() => D2.evaluate(() => !Pantry.get('fruver|palta|hass')), 5000));
+// Cambios a la vez en los dos
+await Promise.all([D1.evaluate(() => { Pantry.add('fruver', 'tomate', 'cherry', 1, 'kg'); Store.commit(); }), D2.evaluate(() => { Pantry.add('fruver', 'papa', 'blanca', 2, 'kg'); Store.commit(); })]);
+const ambos = () => ({ tomate: !!Pantry.get('fruver|tomate|cherry'), papa: !!Pantry.get('fruver|papa|blanca') });
+t('cambios simultáneos: ambos quedan con todo', await hasta(async () => { const [a, b] = [await D1.evaluate(ambos), await D2.evaluate(ambos)]; return a.tomate && a.papa && b.tomate && b.papa; }, 8000));
+await espera(3500);
+const antes = escrituras; await espera(4000);
+t('sin cambios no se escribe (no hay bucle entre dispositivos)', escrituras === antes);
+// Hogar nuevo en un dispositivo → aparece en el otro
+await D1.evaluate(async () => { await Sync.switchTo(() => Store.createHome('Casa Playa')); Store.state.household.members = ['Ana']; Store.touchHousehold(); Store.commit(); });
+t('un hogar nuevo aparece en el otro dispositivo', await hasta(() => D2.evaluate(() => Store.homes().some(h => h.name === 'Casa Playa')), 6000));
+t('sin cambiar el hogar que se está usando', await D2.evaluate(() => Store.activeHome().name === 'Casa Vivo'));
+// Cambio en un hogar que el otro dispositivo no tiene abierto
+await D1.evaluate(() => { Pantry.add('aseo', 'cloro', 'gel', 1, 'un'); Store.commit(); });
+t('cambio en un hogar no abierto se guarda', await hasta(() => D2.evaluate(() => { const h = Store.homes().find(x => x.name === 'Casa Playa'); return !!JSON.parse(Store.exportHome(h.id).data).pantry.items['aseo|cloro|gel']; }), 6000));
+// Un dispositivo que abre con datos propios: sube lo suyo y recibe lo de la cuenta
+const D3 = await enVivo();
+await D3.evaluate(async () => {
+  document.querySelector('#obHome').value = 'Otra casa'; document.querySelector('#obMe').value = 'Ana';
+  document.querySelector('[data-act="obGo"]').click(); await new Promise(r => setTimeout(r, 200));
+  Pantry.add('fruver', 'pera', 'packham', 1, 'kg'); Store.commit(); Store.saveNow();
+  Account.goLive();
+});
+t('al abrirse sube el hogar que solo estaba en este dispositivo', await hasta(() => [...nubeV.values()].some(d => d.name === 'Otra casa'), 6000));
+t('y recibe los de la cuenta', await hasta(() => D3.evaluate(() => Store.homes().some(h => h.name === 'Casa Vivo') && Store.homes().some(h => h.name === 'Casa Playa')), 6000));
+t('los datos del hogar propio siguen ahí', await D3.evaluate(() => Store.activeHome().name === 'Otra casa' && !!Pantry.get('fruver|pera|packham')));
+// Hogar eliminado de un dispositivo no vuelve en vivo
+const noVuelve = await D3.evaluate(async () => {
+  const id = Store.homes().find(h => h.name === 'Casa Playa').id; Store.deleteHome(id);
+  const raw = await vList(); await window.__cb(raw, false); await new Promise(r => setTimeout(r, 300));
+  return !Store.homes().some(h => h.name === 'Casa Playa');
+});
+t('un hogar eliminado de este dispositivo no vuelve en vivo', noVuelve);
+
 console.log(errors.length ? 'ERRORES DE PÁGINA: ' + errors.join(' | ') : 'Sin errores de página');
 console.log(`\n${ok} OK, ${bad} fallas`);
 await browser.close(); server.close();

@@ -209,6 +209,22 @@ const results = await page.evaluate(async () => {
   try { await Docs.add(new File(['x'], 'viejo.doc', { type: 'application/msword' })); } catch (e) { docErr = e.message; }
   check('docAntiguoRechazado', docErr.includes('.docx'));
 
+  // Catálogo chileno y reconocimiento: lo que el producto ES, no su ingrediente
+  const esM = (it, id, v) => { const m = AI.match(it); return !!m && m.i === id && (!v || m.v === v); };
+  check('buscaManjarate', Catalog.search('manjarate').some(r => r.item.id === 'postrelacteo'));
+  check('buscaChiquitin', Catalog.search('chiquitin').some(r => r.item.id === 'postrelacteo'));
+  check('iaSopaNoEsFideos', esM({ generico: 'fideos', nombre: 'Fideos instantáneos Maruchan pollo', variante: 'pollo' }, 'sopa', 'pollo'));
+  check('iaRamenCamaron', esM({ generico: 'fideos instantáneos', nombre: 'Ramen camarón', variante: '' }, 'sopa', 'ramen-camaron'));
+  check('iaSopaBoleta', esM({ generico: 'fideos', nombre: 'Sopa Maggi costilla con fideos', orig: 'SOPA MAGGI COSTILLA' }, 'sopa', 'costilla-con-fideos'));
+  check('iaFideosSiguenFideos', esM({ generico: 'fideos', nombre: 'Fideos spaghetti 5 Carozzi', variante: 'spaghetti 5' }, 'fideos', 'spaghetti-5'));
+  check('iaFideosParaSopa', esM({ generico: 'fideos', nombre: 'Fideos para sopa', variante: '' }, 'fideos', 'para-sopa'));
+  check('iaManjarate', esM({ generico: 'postre', nombre: 'Postre Soprole Manjarate 80 g', variante: '' }, 'postrelacteo', 'manjarate'));
+  check('iaChiquitin', esM({ generico: 'yogur', nombre: 'Chiquitín frutilla', variante: 'frutilla' }, 'postrelacteo', 'petit-suisse-chiquitin'));
+  check('iaCremaSobre', esM({ generico: 'crema', nombre: 'Crema Maggi zapallo 45 g', variante: 'zapallo' }, 'cremasobre', 'zapallo'));
+  check('iaCremaLeche', esM({ generico: 'crema', nombre: 'Crema de leche Colun 200 ml', variante: 'de leche' }, 'crema', 'de-leche'));
+  check('iaSuper8', esM({ generico: 'galleta', nombre: 'Super 8 232 g', orig: 'GALL SUPER 8' }, 'barrachoc', 'super-8'));
+  check('alergiaManjarateSinLactosa', !Catalog.tags('lacteos', 'postrelacteo', 'manjarate-sin-lactosa').includes('lactosa') && Catalog.tags('lacteos', 'postrelacteo', 'manjarate').includes('lactosa'));
+
   // Chef IA
   App.go('menu'); await w(50); Actions.aiChef(); await w(150);
   click('[data-act="chefGo"]');

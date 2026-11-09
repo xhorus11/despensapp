@@ -8,7 +8,12 @@ export const REC_CATS = ['Rápida', 'Casera', 'Chilena', 'Saludable', 'Vegetaria
 
 const PRODUCT_RULES = `- "nombre": nombre claro en español para una persona común (ej. "CHAMPINON BDJA 20" -> "Champiñón bandeja 200 g"; "LECHE DESC SOPROLE 1L" -> "Leche descremada Soprole 1 L").
 - "generico": el producto base, en singular y sin marca ni tamaño, como se busca en un supermercado chileno (ej. "leche", "champiñón", "papel higiénico", "pechuga de pollo" -> "pollo", "marraqueta" -> "pan").
-- "variante": el tipo, sabor o formato que distingue al producto, sin marca (ej. "descremada", "sin lactosa", "bandeja", "doble hoja", "pechuga deshuesada"); "" si no aplica.`;
+- "variante": el tipo, sabor o formato que distingue al producto, sin marca (ej. "descremada", "sin lactosa", "bandeja", "doble hoja", "pechuga deshuesada"); "" si no aplica.
+- "generico" dice QUÉ ES el producto terminado, nunca su ingrediente principal. Lee lo escrito en el envase o la línea y distingue:
+  - Sopa o fideos instantáneos (Maruchan, Cup Noodles, Nissin, ramen, yakisoba, "Sopa para uno", sopa Maggi o Gourmet en sobre) -> "sopa instantánea", con el sabor o "ramen" en variante. NUNCA "fideos": "fideos" es solo pasta seca para cocer.
+  - Crema en sobre (Crema Maggi o Gourmet de zapallo, espárragos, etc.) -> "crema en sobre", no "crema" (la crema de leche es otra cosa).
+  - Postres de la sección refrigerada -> "postre refrigerado" (Manjarate, Chandelle, Gozzo, flan, jalea, leche asada, sémola con leche; Chiquitín -> variante "petit suisse chiquitín"). Conserva la marca-producto en la variante, por ejemplo "manjarate".
+  - Golosinas y galletas chilenas conocidas: deja su nombre en la variante (Super 8, Chokita o Negrita, Morocha, Trencito, Sahne-Nuss, Chubi, Vizzio, Tritón, Frac, Kuky, Obsesión, Tuareg).`;
 
 /* ---------- Boleta ---------- */
 export const BOLETA_PROMPT = `Eres un lector de boletas y facturas chilenas (supermercados, almacenes, ferias, farmacias, delivery).
@@ -58,6 +63,7 @@ export const BOLETA_SCHEMA = {
 export const DESPENSA_PROMPT = `Eres un asistente de inventario del hogar en Chile. La imagen muestra un refrigerador, una despensa, una alacena o productos sobre una mesa.
 Devuelve SOLO el JSON pedido con los productos que se VEN con claridad. Reglas:
 - No inventes productos que no se vean. Si algo es dudoso, inclúyelo con "confianza": "baja".
+- Lee las etiquetas antes de decidir: un envase con fideos en el dibujo puede ser una sopa instantánea. Si no alcanzas a leer qué es, usa "confianza": "baja".
 ${PRODUCT_RULES}
 - "cant": cuántas unidades o envases se ven (estima si están apilados). Para frutas y verduras sueltas, cuenta las unidades.
 - "unidad": "un" casi siempre; "kg" o "g" solo si se ve una bolsa o bandeja a granel con el peso escrito.
